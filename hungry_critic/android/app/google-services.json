@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "22005990144",
+    "project_id": "hungry-critic",
+    "storage_bucket": "hungry-critic.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:22005990144:android:5b997b1a576f574d24e9e5",
+        "android_client_info": {
+          "package_name": "com.hungrycritic.hungry_critic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "22005990144-4kkf662hu8pp0s4a53d2t2cj8fr1jjn5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hungrycritic.hungry_critic",
+            "certificate_hash": "39b3c000f7dadd35f616413bd3eb6cf5708cfca9"
+          }
+        },
+        {
+          "client_id": "22005990144-rh1hc72423cjdd2ba2d2hpd0tapldn7u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArWgYeHLOwWgwd0iZkCV62Q8Mq5zfAAjo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "22005990144-rh1hc72423cjdd2ba2d2hpd0tapldn7u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

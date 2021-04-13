@@ -38,8 +38,18 @@ class SignUpService {
     required Function(FirebaseAuthException) onError,
   }) async {
     Aspects.instance.log('AccountBloc -> authWithEmail');
-    
-    
+  }
+
+  Future authWithSocial(SignInMethod method, Function? onAuto) async {
+    Aspects.instance.log('AccountBloc -> authWithSocial');
+
+    final auth = {
+      SignInMethod.GOOGLE: authWithGoogle,
+      SignInMethod.TWITTER: authWithTwitter,
+    }[method];
+
+    if (auth == null) throw PlatformException(code: 'UNKNOWN_METHOD');
+    signIn(method, await auth()).then((_) => onAuto?.call());
   }
 
   Future<SocialData> authWithGoogle() async {
@@ -60,12 +70,16 @@ class SignUpService {
     return SocialData(gAccount.email, cred, gAccount.email);
   }
 
-  signIn(SignInMethod method, AuthCredential aCred) async {
-    final user = await _createUser(aCred);
-    if(user == null) throw Exception('Could not create!');
+  Future<SocialData> authWithTwitter() async {
+    throw Exception('//TODO: Implement');
+  }
 
-    final email = user.email;
-    if(email == null) throw Exception('Could not get email!');
+  Future signIn(SignInMethod method, SocialData data) async {
+    final user = await _createUser(data.cred);
+    if (user == null) throw Exception('Could not create!');
+
+    final email = data.email;
+    if (email == null) throw Exception('Could not get email!');
 
     final creds = Credentials(method, email, user.uid);
     final receipt = await SignInApi(bloc.config).signIn(creds);
