@@ -68,7 +68,7 @@ class SignUpService {
       idToken: authInfo.idToken,
       accessToken: authInfo.accessToken,
     );
-    return SocialData(gAccount.email, cred, gAccount.email);
+    return SocialData(gAccount.id, cred, gAccount.email);
   }
 
   Future<SocialData> authWithFacebook() async {

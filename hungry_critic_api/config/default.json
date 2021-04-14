@@ -1,0 +1,12 @@
+{
+  "db": {
+    "url": "mongodb://localhost:27017",
+    "name": "hungry_critic"
+  },
+  "log": {
+    "level": "debug"
+  },
+  "auth": {
+    "key": "yo_yo_yo"
+  }
+}
