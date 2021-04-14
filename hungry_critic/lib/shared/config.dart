@@ -1,9 +1,40 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'config.g.dart';
+
+@JsonSerializable(createToJson: false)
+class AppProps {
+  AppProps({
+    required this.twitterKey,
+    required this.twitterSecret,
+  });
+
+  factory AppProps.fromJson(Map<String, dynamic> json) => _$AppPropsFromJson(json);
+
+  AppProps? _instance;
+
+
+
+  final String twitterKey;
+
+  final String twitterSecret;
+}
+
 class AppConfig {
-  const AppConfig({required this.http, required this.env});
+  AppConfig({
+    required this.http,
+    required this.env,
+  });
 
   final Environment env;
 
   final HttpOptions http;
+
+  late final AppProps props;
 }
 
 enum Environment { LOCAL, DEV, PROD }

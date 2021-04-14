@@ -2,17 +2,17 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'account.g.dart';
 
-enum SignInMethod { EMAIL, GOOGLE, TWITTER }
+enum SignInMethod { EMAIL, GOOGLE, FACEBOOK }
 
 @JsonSerializable()
 class Credentials {
   final SignInMethod method;
 
-  final String email;
+  final String identifier;
 
   final String firebaseId;
 
-  Credentials(this.method, this.email, this.firebaseId);
+  Credentials(this.method, this.identifier, this.firebaseId);
 
   factory Credentials.fromJson(Map<String, dynamic> json) => _$CredentialsFromJson(json);
 
@@ -60,6 +60,7 @@ enum UserRole { CUSTOMER, OWNER, ADMIN }
 class UserProfile {
   UserProfile({
     required this.id,
+    this.email,
     this.name,
     this.role = UserRole.CUSTOMER,
   });
@@ -67,6 +68,8 @@ class UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
 
   final String id;
+
+  String? email;
 
   String? name;
 
@@ -77,5 +80,13 @@ class UserProfile {
   void update(UserProfile profile) {
     role = profile.role;
     name = profile.name ?? name;
+  }
+
+  UserProfile copyWith({String? name, UserRole? role}) {
+    return UserProfile(
+      id: id,
+      name: name ?? this.name,
+      role: role ?? this.role,
+    );
   }
 }

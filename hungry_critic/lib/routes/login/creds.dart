@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
@@ -8,11 +9,6 @@ import 'package:hungry_critic/shared/aspects.dart';
 import 'package:hungry_critic/shared/colors.dart';
 
 import '../../services/sign_in.dart';
-
-final _lMap = <SignInMethod, String>{
-  SignInMethod.GOOGLE: 'google',
-  SignInMethod.TWITTER: 'twitter',
-};
 
 extension StringExtension on String {
   String capitalize() {
@@ -76,7 +72,7 @@ class _AuthInitPageState extends State<AuthInitPage> {
             runSpacing: 7.5,
             children: [
               _socialButton(SignInMethod.GOOGLE, greySwatch[50], greySwatch[500]),
-              _socialButton(SignInMethod.TWITTER, Color(0xff1da1f2), greySwatch[50]),
+              _socialButton(SignInMethod.FACEBOOK, Color(0xff3b5998), greySwatch[50]),
             ],
           ),
         ),
@@ -85,12 +81,12 @@ class _AuthInitPageState extends State<AuthInitPage> {
   }
 
   _socialButton(SignInMethod method, Color bColor, Color fColor) {
-    final imageName = _lMap[method]?.toLowerCase() ?? '';
+    final imageName = describeEnum(method).toLowerCase();
     final label = imageName.capitalize();
     return GestureDetector(
       onTap: () => _authWithSocial(method),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
         decoration: BoxDecoration(
           color: bColor,
           borderRadius: BorderRadius.circular(7.5),
@@ -112,7 +108,7 @@ class _AuthInitPageState extends State<AuthInitPage> {
                 width: 25,
               ),
             ),
-            SizedBox(width: 5),
+            SizedBox(width: 10),
             Text(
               '$label',
               style: _theme.textTheme.bodyText1?.copyWith(
@@ -154,7 +150,7 @@ class _AuthInitPageState extends State<AuthInitPage> {
   }
 
   Widget _showSocialError() {
-    final social = [SignInMethod.TWITTER, SignInMethod.GOOGLE].contains(_method);
+    final social = [SignInMethod.FACEBOOK, SignInMethod.GOOGLE].contains(_method);
     if (social) {
       if (_invalidInput) return _makeError('Something went wrong! Try again.');
       if (_connectionFailure) return _makeError('Check your network and try again!');

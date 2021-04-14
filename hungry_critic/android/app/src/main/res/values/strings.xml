@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Hungry Critic</string>
+  <string name="facebook_app_id">759908608252635</string>
+  <string name="fb_login_protocol_scheme">fb759908608252635</string>
+</resources>

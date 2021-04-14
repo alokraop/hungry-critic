@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../../blocs/account.dart';
 import '../../services/sign_in.dart';
-import 'auth_init_page.dart';
+import '../profile/edit.dart';
+import 'creds.dart';
+import 'verify.dart';
 
 class LoginScreens extends StatefulWidget {
   final AccountBloc bloc;
@@ -24,7 +26,7 @@ class _LoginScreensState extends State<LoginScreens> {
   late SignUpService _service;
 
   final _controller = PageController(keepPage: false);
-  bool _needsAuth = true;
+  bool _needsVerify = true;
 
   final _node = FocusNode();
 
@@ -67,7 +69,13 @@ class _LoginScreensState extends State<LoginScreens> {
                   onManual: nextPage,
                   onAuto: initProfile,
                 );
-                final pageMap = {0: one};
+                final two = VerifyScreen(service: _service, onNext: nextPage);
+                final three = EditProfile(bloc: widget.bloc, onDone: doLogin);
+                final pageMap = {
+                  0: one,
+                  1: _needsVerify ? two : three,
+                  2: three,
+                };
                 return pageMap[index] ?? one;
               },
             ),
@@ -79,7 +87,7 @@ class _LoginScreensState extends State<LoginScreens> {
 
   Future<void> initProfile() async {
     setState(() {
-      _needsAuth = false;
+      _needsVerify = false;
     });
     nextPage();
   }
@@ -107,7 +115,7 @@ class _LoginScreensState extends State<LoginScreens> {
 
   restart() async {
     _controller.jumpToPage(0);
-    _needsAuth = true;
+    _needsVerify = true;
     setState(() {});
   }
 

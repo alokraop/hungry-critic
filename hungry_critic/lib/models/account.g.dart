@@ -9,7 +9,7 @@ part of 'account.dart';
 Credentials _$CredentialsFromJson(Map<String, dynamic> json) {
   return Credentials(
     _$enumDecode(_$SignInMethodEnumMap, json['method']),
-    json['email'] as String,
+    json['identifier'] as String,
     json['firebaseId'] as String,
   );
 }
@@ -17,7 +17,7 @@ Credentials _$CredentialsFromJson(Map<String, dynamic> json) {
 Map<String, dynamic> _$CredentialsToJson(Credentials instance) =>
     <String, dynamic>{
       'method': _$SignInMethodEnumMap[instance.method],
-      'email': instance.email,
+      'identifier': instance.identifier,
       'firebaseId': instance.firebaseId,
     };
 
@@ -50,7 +50,7 @@ K _$enumDecode<K, V>(
 const _$SignInMethodEnumMap = {
   SignInMethod.EMAIL: 'EMAIL',
   SignInMethod.GOOGLE: 'GOOGLE',
-  SignInMethod.TWITTER: 'TWITTER',
+  SignInMethod.FACEBOOK: 'FACEBOOK',
 };
 
 AuthReceipt _$AuthReceiptFromJson(Map<String, dynamic> json) {
@@ -84,6 +84,7 @@ Map<String, dynamic> _$AccountToJson(Account instance) => <String, dynamic>{
 UserProfile _$UserProfileFromJson(Map<String, dynamic> json) {
   return UserProfile(
     id: json['id'] as String,
+    email: json['email'] as String?,
     name: json['name'] as String?,
     role: _$enumDecode(_$UserRoleEnumMap, json['role']),
   );
@@ -100,6 +101,7 @@ Map<String, dynamic> _$UserProfileToJson(UserProfile instance) {
     }
   }
 
+  writeNotNull('email', instance.email);
   writeNotNull('name', instance.name);
   val['role'] = _$UserRoleEnumMap[instance.role];
   return val;

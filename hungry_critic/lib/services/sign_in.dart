@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 import '../apis/account.dart';
 import '../apis/signIn.dart';
@@ -45,7 +46,7 @@ class SignUpService {
 
     final auth = {
       SignInMethod.GOOGLE: authWithGoogle,
-      SignInMethod.TWITTER: authWithTwitter,
+      SignInMethod.FACEBOOK: authWithFacebook,
     }[method];
 
     if (auth == null) throw PlatformException(code: 'UNKNOWN_METHOD');
@@ -70,18 +71,24 @@ class SignUpService {
     return SocialData(gAccount.email, cred, gAccount.email);
   }
 
-  Future<SocialData> authWithTwitter() async {
-    throw Exception('//TODO: Implement');
+  Future<SocialData> authWithFacebook() async {
+    final result = await FacebookAuth.instance.login();
+    final accessToken = result.accessToken;
+    if (result.status != LoginStatus.success || accessToken == null) {
+      throw PlatformException(
+        code: 'SIGN_IN_CANCELED',
+        message: 'Sign in canceled',
+      );
+    }
+    final cred = FacebookAuthProvider.credential(accessToken.token);
+    return SocialData(accessToken.userId, cred);
   }
 
   Future signIn(SignInMethod method, SocialData data) async {
     final user = await _createUser(data.cred);
     if (user == null) throw Exception('Could not create!');
 
-    final email = data.email;
-    if (email == null) throw Exception('Could not get email!');
-
-    final creds = Credentials(method, email, user.uid);
+    final creds = Credentials(method, data.id, user.uid);
     final receipt = await SignInApi(bloc.config).signIn(creds);
     _account = Account(creds: creds, token: receipt.token);
 
@@ -91,7 +98,7 @@ class SignUpService {
       if (oldAccount == null) throw Exception('Couldn\t fetch account!');
       _account.profile = oldAccount.profile;
     } else {
-      _account.profile = UserProfile(id: receipt.id);
+      _account.profile = UserProfile(id: receipt.id, email: data.email);
     }
 
     return bloc.save(_account);
@@ -101,4 +108,6 @@ class SignUpService {
     final result = await _auth.signInWithCredential(cred);
     return result.user;
   }
+
+  isVerified() {}
 }
