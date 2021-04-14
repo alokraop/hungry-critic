@@ -2,7 +2,7 @@ import 'main.dart';
 import 'shared/config.dart';
 
 final config = AppConfig(
-  http: HttpOptions(secure: false, host: '192.168.0.11', port: 9999),
+  http: HttpOptions(secure: false, host: '192.168.0.9', port: 9999),
   env: Environment.LOCAL,
 );
 

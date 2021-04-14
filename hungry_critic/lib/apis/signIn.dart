@@ -17,7 +17,7 @@ class SignInApi {
 
   final AppConfig? _config;
 
-  UriCreator get url => _config!.http.withBase('sign-up');
+  UriCreator get url => _config!.http.withBase('sign-in');
 
   final headers = {'Content-Type': 'application/json'};
 

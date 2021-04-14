@@ -20,11 +20,9 @@ class AccountBloc {
 
   late Account account;
 
-  String get id => account.profile.id;
+  String get id => account.id;
 
   String get token => account.token;
-
-  UserProfile get profile => account.profile;
 
   final BehaviorSubject<Account> _accountSubject = BehaviorSubject<Account>();
 
@@ -37,11 +35,11 @@ class AccountBloc {
       _api = AccountApi(this.config, account.token);
       _publish(account);
     }
-    return _account?.profile.name != null;
+    return _account?.name != null;
   }
 
-  Future updateProfile(UserProfile changes) {
-    account.profile.update(changes);
+  Future update(Account changes) {
+    account.update(changes);
     _publish(account);
 
     return Future.wait([

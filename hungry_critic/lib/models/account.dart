@@ -4,8 +4,27 @@ part 'account.g.dart';
 
 enum SignInMethod { EMAIL, GOOGLE, FACEBOOK }
 
+enum UserRole { CUSTOMER, OWNER, ADMIN }
+
+_encodeMethod(SignInMethod method) => method.index;
+_decodeMethod(int? index) {
+  return SignInMethod.values.firstWhere(
+    (v) => v.index == index,
+    orElse: () => SignInMethod.EMAIL,
+  );
+}
+
+_encodeRole(UserRole role) => role.index;
+_decodeRole(int? index) {
+  return UserRole.values.firstWhere(
+    (v) => v.index == index,
+    orElse: () => UserRole.CUSTOMER,
+  );
+}
+
 @JsonSerializable()
 class Credentials {
+  @JsonKey(toJson: _encodeMethod, fromJson: _decodeMethod)
   final SignInMethod method;
 
   final String identifier;
@@ -19,7 +38,7 @@ class Credentials {
   Map<String, dynamic> toJson() => _$CredentialsToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(createToJson: false)
 class AuthReceipt {
   AuthReceipt({
     required this.id,
@@ -39,54 +58,54 @@ class AuthReceipt {
 @JsonSerializable()
 class Account {
   Account({
-    required this.creds,
-    required this.token,
-  });
-
-  factory Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
-
-  late UserProfile profile;
-
-  final Credentials creds;
-
-  final String token;
-
-  Map<String, dynamic> toJson() => _$AccountToJson(this);
-}
-
-enum UserRole { CUSTOMER, OWNER, ADMIN }
-
-@JsonSerializable(includeIfNull: false)
-class UserProfile {
-  UserProfile({
     required this.id,
+    required this.method,
     this.email,
     this.name,
     this.role = UserRole.CUSTOMER,
   });
 
-  factory UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
+  factory Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
+
+  factory Account.fromRow(Map<String, dynamic> row) {
+    final account = Account.fromJson(row);
+    return account..token = row['token'];
+  }
 
   final String id;
+
+  @JsonKey(toJson: _encodeMethod, fromJson: _decodeMethod)
+  final SignInMethod method;
 
   String? email;
 
   String? name;
 
+  @JsonKey(toJson: _encodeRole, fromJson: _decodeRole)
   UserRole role;
 
-  Map<String, dynamic> toJson() => _$UserProfileToJson(this);
+  @JsonKey(ignore: true)
+  late String token;
 
-  void update(UserProfile profile) {
-    role = profile.role;
-    name = profile.name ?? name;
+  Map<String, dynamic> toJson() => _$AccountToJson(this);
+
+  Map<String, dynamic> toRow() {
+    final json = toJson();
+    return json..['token'] = token;
   }
 
-  UserProfile copyWith({String? name, UserRole? role}) {
-    return UserProfile(
+  void update(Account account) {
+    role = account.role;
+    name = account.name ?? name;
+  }
+
+  Account copyWith({String? name, UserRole? role}) {
+    return Account(
       id: id,
+      method: method,
+      email: email,
       name: name ?? this.name,
       role: role ?? this.role,
-    );
+    )..token = token;
   }
 }

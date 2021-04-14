@@ -14,7 +14,7 @@ export function setupRoutes(webServer: Express) {
       stream: { write: (log) => logger.info(log) },
     }),
   );
-  webServer.use('/auth', authRouter);
+  webServer.use('/sign-in', authRouter);
   webServer.use('/accounts', Authenticate, accountRouter);
   webServer.use(HandleErrors);
 }

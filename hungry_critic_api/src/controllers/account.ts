@@ -10,7 +10,7 @@ export const accountRouter: Router = Router();
 const service = () => Container.get(AccountService);
 
 accountRouter.get('/', async (_: Request, res: Response) => {
-    const account = await service().fetch(res.locals.accountId);
+    const account = await service().fetchProfile(res.locals.accountId);
     res.json(account);
 });
 

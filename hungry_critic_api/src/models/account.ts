@@ -21,29 +21,25 @@ export class Credentials {
   method: SignInMethod;
 }
 
-export class Account {
-  @Allow()
-  id: string;
+export class Settings {
 
   hashedPassword: HashResult;
 
   @Allow()
   blocked: boolean;
 
-  @ValidateNested()
-  @Type(() => Credentials)
-  creds: Credentials;
-  
-  @ValidateNested()
-  @Type(() => UserProfile)
-  profile: UserProfile;
+  @Allow()
+  attempts: number;
 }
 
-export enum UserRole { CUSTOMER, OWNER, ADMIN }
+export enum UserRole {
+  CUSTOMER,
+  OWNER,
+  ADMIN,
+}
 
-export class UserProfile {
-
-  @IsDefined()
+export class Account {
+  @Allow()
   id: string;
 
   @Allow()
@@ -55,5 +51,19 @@ export class UserProfile {
   @IsDefined()
   @IsEnum(UserRole)
   role: UserRole;
+  
+  @IsDefined()
+  @IsEnum(SignInMethod)
+  method: SignInMethod;
+  
+  @Allow()
+  settings: Settings;
+}
 
+export interface AuthReceipt {
+  id: string;
+
+  token: string;
+
+  fresh: boolean;
 }

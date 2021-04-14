@@ -89,7 +89,7 @@ class _EditProfileState extends State<EditProfile> {
   void initState() {
     super.initState();
     final account = widget.bloc.account;
-    _nameC.text = account.profile.name ?? '';
+    _nameC.text = account.name ?? '';
   }
 
   @override
@@ -108,6 +108,7 @@ class _EditProfileState extends State<EditProfile> {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: screen.width * 0.125),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('Your info:', style: _theme.textTheme.headline5),
@@ -202,9 +203,9 @@ class _EditProfileState extends State<EditProfile> {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _loading = true);
-      final profile = widget.bloc.account.profile;
+      final account = widget.bloc.account;
       return widget.bloc
-          .updateProfile(profile.copyWith(name: _nameC.text, role: _role))
+          .update(account.copyWith(name: _nameC.text, role: _role))
           .then((_) => widget.onDone());
     } else {
       setState(() => _mode = AutovalidateMode.onUserInteraction);

@@ -54,9 +54,11 @@ describe('Sign in tests', () => {
     fetch.mockImplementation((_: string) => {
       return <Account>{
         id: 'some-id',
-        hashedPassword: {
-          cipher: 'some-cipher',
-          salt: 'some-salt',
+        settings: {
+          hashedPassword: {
+            cipher: 'some-cipher',
+            salt: 'some-salt',
+          },
         },
       };
     });

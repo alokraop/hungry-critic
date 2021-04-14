@@ -67,7 +67,7 @@ class _HungryCriticState extends State<HungryCritic> {
   }
 
   _onLogin() async {
-    await Aspects.instance.recordLogin(_self.account.creds.method.toString());
+    await Aspects.instance.recordLogin(_self.account.method.toString());
     setState(() => _loggedIn = true);
   }
 

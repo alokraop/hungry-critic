@@ -14,7 +14,7 @@ class SelfProvider {
     try {
       final profileJson = await _storage.read(key: 'account');
       if (profileJson == null) return null;
-      return Account.fromJson(jsonDecode(profileJson));
+      return Account.fromRow(jsonDecode(profileJson));
     } catch (e) {
       Aspects.instance.log('Couldn\'t find profile: ${e.toString()}');
       return null;
@@ -22,7 +22,7 @@ class SelfProvider {
   }
 
   Future save(Account account) {
-    final userValue = jsonEncode(account.toJson());
+    final userValue = jsonEncode(account.toRow());
     return _storage.write(key: 'account', value: userValue);
   }
 

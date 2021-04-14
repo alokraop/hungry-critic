@@ -90,15 +90,17 @@ class SignUpService {
 
     final creds = Credentials(method, data.id, user.uid);
     final receipt = await SignInApi(bloc.config).signIn(creds);
-    _account = Account(creds: creds, token: receipt.token);
+    _account = Account(
+      id: receipt.id,
+      method: creds.method,
+      email: data.email,
+    )..token = receipt.token;
 
-    final api = AccountApi(bloc.config, _account.token);
+    final api = AccountApi(bloc.config, receipt.token);
     if (!receipt.fresh) {
       final oldAccount = await api.fetchAccount(receipt.id);
       if (oldAccount == null) throw Exception('Couldn\t fetch account!');
-      _account.profile = oldAccount.profile;
-    } else {
-      _account.profile = UserProfile(id: receipt.id, email: data.email);
+      _account.update(oldAccount);
     }
 
     return bloc.save(_account);

@@ -6,13 +6,12 @@ import { Account } from '../models/account';
 export class AccountService {
   constructor(private dao: AccountDao) {}
 
-  async idExists(id: string): Promise<boolean> {
-    const account = await this.fetch(id);
-    return !!account;
+  async fetch(id: string): Promise<Account> {
+    return this.dao.fetch(id);
   }
 
-  async fetch(id: string): Promise<Account> {
-    return this.dao.fetch(id, { hashedPassword: 0 });
+  async fetchProfile(id: string): Promise<Account> {
+    return this.dao.fetch(id, { settings: 0 });
   }
 
   async create(account: Account): Promise<any> {

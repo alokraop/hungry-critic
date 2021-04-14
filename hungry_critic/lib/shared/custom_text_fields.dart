@@ -15,7 +15,7 @@ class UnderlinedTextField extends StatefulWidget {
   final bool isDense;
   final TextCapitalization caps;
 
-  const UnderlinedTextField({
+  UnderlinedTextField({
     Key? key,
     this.isDense = true,
     this.validator,
@@ -37,40 +37,37 @@ class _UnderlinedTextFieldState extends State<UnderlinedTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Form(
-      key: widget.state,
-      child: SizedBox(
-        child: TextFormField(
-          controller: widget.controller,
-          decoration: InputDecoration(
-            contentPadding: EdgeInsets.all(7.5),
-            prefixIcon: widget.prefixIcon,
-            hintText: widget.hintText,
-            hintStyle: theme.textTheme.subtitle1,
-            enabledBorder: _makeBorder(greySwatch[300]),
-            focusedBorder: _makeBorder(greySwatch),
-            errorBorder: _makeBorder(theme.errorColor),
-            errorStyle: TextStyle(color: theme.errorColor),
-            isDense: widget.isDense,
-          ),
-          style: theme.textTheme.subtitle1,
-          cursorColor: greySwatch[800],
-          keyboardType: widget.keyboardType,
-          textCapitalization: widget.caps,
-          onChanged: (v) {
-            unsubmitted = true;
-            widget.state?.currentState?.validate();
-            unsubmitted = false;
-          },
-          validator: (v) {
-            if (unsubmitted) return null;
-            return widget.validator?.call(v);
-          },
-          textAlign: widget.textAlign,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(widget.maxLength),
-          ],
+    return SizedBox(
+      child: TextFormField(
+        controller: widget.controller,
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.all(7.5),
+          prefixIcon: widget.prefixIcon,
+          hintText: widget.hintText,
+          hintStyle: theme.textTheme.subtitle1,
+          enabledBorder: _makeBorder(greySwatch[300]),
+          focusedBorder: _makeBorder(greySwatch),
+          errorBorder: _makeBorder(theme.errorColor),
+          errorStyle: TextStyle(color: theme.errorColor),
+          isDense: widget.isDense,
         ),
+        style: theme.textTheme.subtitle1,
+        cursorColor: greySwatch[800],
+        keyboardType: widget.keyboardType,
+        textCapitalization: widget.caps,
+        onChanged: (v) {
+          unsubmitted = true;
+          widget.state?.currentState?.validate();
+          unsubmitted = false;
+        },
+        validator: (v) {
+          if (unsubmitted) return null;
+          return widget.validator?.call(v);
+        },
+        textAlign: widget.textAlign,
+        inputFormatters: [
+          LengthLimitingTextInputFormatter(widget.maxLength),
+        ],
       ),
     );
   }
