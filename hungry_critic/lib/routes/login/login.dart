@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hungry_critic/shared/colors.dart';
 
 import '../../blocs/account.dart';
 import '../../services/sign_in.dart';
@@ -54,9 +55,6 @@ class _LoginScreensState extends State<LoginScreens> {
       ),
       child: Scaffold(
         body: Container(
-          decoration: BoxDecoration(
-            color: _theme.primaryColorLight,
-          ),
           child: GestureDetector(
             onTap: _dropKeyboard,
             child: PageView.builder(

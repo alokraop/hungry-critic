@@ -12,7 +12,30 @@ import 'shared/context.dart';
 final theme = ThemeData(
   brightness: Brightness.light,
   fontFamily: 'NotoSans',
-  textTheme: TextTheme(),
+  primaryColor: Color(0xffcb202d),
+  textTheme: TextTheme(
+    subtitle1: TextStyle(
+      debugLabel: 'stock subTitle',
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      decoration: TextDecoration.none,
+    ),
+    bodyText1: TextStyle(
+      debugLabel: 'stock body',
+      fontSize: 14.75,
+      decoration: TextDecoration.none,
+    ),
+    bodyText2: TextStyle(
+      debugLabel: 'stock body',
+      fontSize: 13.75,
+      decoration: TextDecoration.none,
+    ),
+    caption: TextStyle(
+      debugLabel: 'stock badge',
+      fontSize: 13,
+      decoration: TextDecoration.none,
+    ),
+  ),
 );
 
 void startApp(AppConfig config) => runApp(HungryCritic(config: config));

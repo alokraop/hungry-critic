@@ -109,3 +109,12 @@ class Account {
     )..token = token;
   }
 }
+
+enum AuthStatus {
+  NONE,
+  SUCCESS,
+  DUPLICATE,
+  NO_ACCOUNT,
+  UNVERIFIED,
+  INCORRECT_CREDS,
+}

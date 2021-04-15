@@ -14,6 +14,7 @@ class UnderlinedTextField extends StatefulWidget {
   final int? maxLength;
   final bool isDense;
   final TextCapitalization caps;
+  final bool obscure;
 
   UnderlinedTextField({
     Key? key,
@@ -22,6 +23,7 @@ class UnderlinedTextField extends StatefulWidget {
     this.state,
     this.controller,
     this.hintText,
+    this.obscure = false,
     this.caps = TextCapitalization.sentences,
     this.keyboardType = TextInputType.text,
     this.prefixIcon,
@@ -41,17 +43,20 @@ class _UnderlinedTextFieldState extends State<UnderlinedTextField> {
       child: TextFormField(
         controller: widget.controller,
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.all(7.5),
+          contentPadding: EdgeInsets.all(12.5),
           prefixIcon: widget.prefixIcon,
           hintText: widget.hintText,
-          hintStyle: theme.textTheme.subtitle1,
+          hintStyle: theme.textTheme.bodyText1?.copyWith(
+            color: greySwatch[800].withOpacity(0.6),
+          ),
           enabledBorder: _makeBorder(greySwatch[300]),
-          focusedBorder: _makeBorder(greySwatch),
+          focusedBorder: _makeBorder(theme.primaryColor),
           errorBorder: _makeBorder(theme.errorColor),
           errorStyle: TextStyle(color: theme.errorColor),
           isDense: widget.isDense,
         ),
-        style: theme.textTheme.subtitle1,
+        style: theme.textTheme.bodyText1,
+        obscureText: widget.obscure,
         cursorColor: greySwatch[800],
         keyboardType: widget.keyboardType,
         textCapitalization: widget.caps,
@@ -73,8 +78,9 @@ class _UnderlinedTextFieldState extends State<UnderlinedTextField> {
   }
 
   _makeBorder(Color color) {
-    return UnderlineInputBorder(
+    return OutlineInputBorder(
       borderSide: BorderSide(color: color, width: 1),
+      borderRadius: BorderRadius.circular(22.5),
     );
   }
 }
