@@ -8,7 +8,12 @@ export const authRouter: Router = Router();
 
 const service = () => Container.get(AuthService);
 
-authRouter.post('/', Validate(Credentials), async (req: Request, res: Response) => {
+authRouter.post('/sign-up', Validate(Credentials), async (req: Request, res: Response) => {
+  const receipt = await service().signUp(req.body);
+  res.status(201).json(receipt);
+});
+
+authRouter.post('/sign-in', Validate(Credentials), async (req: Request, res: Response) => {
   const receipt = await service().signIn(req.body);
   res.status(201).json(receipt);
 });

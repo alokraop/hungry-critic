@@ -1,24 +1,59 @@
 import { Service } from 'typedi';
-import { AccountDao } from '../data/accounts';
-import { Account } from '../models/account';
+import { APIError } from '../controllers/middleware/error';
+import { AccountDao } from '../data/account';
+import { Account, Profile, Settings, UserRole } from '../models/account';
+import { TokenInfo } from '../models/internal';
+import { TokenService } from './token';
 
 @Service()
 export class AccountService {
-  constructor(private dao: AccountDao) {}
+  constructor(private dao: AccountDao, private token: TokenService) {}
 
-  async fetch(id: string): Promise<Account> {
-    return this.dao.fetch(id);
+  async fetchAll(caller: TokenInfo): Promise<Account[]> {
+    if (caller.role !== UserRole.ADMIN) {
+      throw new Error("You don't have priviledges to view all users");
+    }
+    return this.dao.findAll({}, { 'settings.hashedPassword': 0 });
   }
 
-  async fetchProfile(id: string): Promise<Account> {
-    return this.dao.fetch(id, { settings: 0 });
+  async fetchExternal(id: string): Promise<Account | null> {
+    return this.dao.fetch(id, { _id: 0, settings: 0 });
+  }
+
+  async fetchInternal(id: string): Promise<Account | null> {
+    return this.dao.fetch(id);
   }
 
   async create(account: Account): Promise<any> {
     return this.dao.save(account);
   }
 
-  async update(account: Account): Promise<any> {
-    return this.dao.update({ id: account.id }, account);
+  async createProfile(account: Account, caller: TokenInfo): Promise<any> {
+    if (caller.id !== account.id) {
+      throw new APIError("You don't have priviledges to modify this account!", 403);
+    }
+    const existing = await this.dao.fetch(account.id);
+    if (!existing) throw new APIError("Can't create a profile before creating the account!");
+    if (existing.settings.initialized) throw new APIError('Profile exists!!');
+    return this.dao.update(
+      { id: account.id },
+      { ...account, settings: { ...existing.settings, initialized: true } },
+    );
+  }
+
+  async update(id: string, profile: Profile, caller: TokenInfo): Promise<string> {
+    if (id !== caller.id && caller.role !== UserRole.ADMIN) {
+      throw new APIError("You don't have priviledges to modify this account!");
+    }
+    return this.dao.update({ id }, profile);
+  }
+
+  async updateSettings(id: string, settings: Settings): Promise<any> {
+    return this.dao.update({ id }, { settings });
+  }
+
+  async delete(id: string, caller: TokenInfo): Promise<any> {
+    //TODO: Delete all relevant restaurants/reviews
+    throw new Error('Method not implemented.');
   }
 }

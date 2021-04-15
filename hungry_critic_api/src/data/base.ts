@@ -17,22 +17,24 @@ async function db(): Promise<Db> {
 export class BaseDao<T extends Object> {
   constructor(private collection: string, private type: ClassConstructor<T>) {}
 
-  async fetch(id: string, projection: any = {}): Promise<T> {
+  async fetch(id: string, projection: any = { '_id': 0 }): Promise<T | null> {
     const client = await this.init();
-    const entity = await client.findOne({ id }, { projection });
-    return plainToClass(this.type, entity);
+    return client.findOne({ id }, { projection });
   }
 
-  async find(query: FilterQuery<any>, projection: any = {}): Promise<T> {
+  async fetchExternal(id: string, projection: any = {}): Promise<T | null> {
+    const result = await this.fetch(id, projection);
+    return plainToClass(this.type, result);
+  }
+
+  async find(query: FilterQuery<any>, projection: any = {}): Promise<T | null> {
     const client = await this.init();
-    const entity = client.findOne(query, { projection });
-    return plainToClass(this.type, entity);
+    return client.findOne(query, { projection });
   }
 
   async findAll(query: FilterQuery<any>, projection: any = {}): Promise<T[]> {
     const client = await this.init();
-    const entities = await client.find(query, { projection }).toArray();
-    return entities.map((e) => plainToClass(this.type, e));
+    return client.find(query, { projection }).toArray();
   }
 
   async save(document: T): Promise<any> {

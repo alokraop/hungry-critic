@@ -6,6 +6,7 @@ import { authRouter } from './controllers/auth';
 import { HandleErrors } from './controllers/middleware/error';
 import { Authenticate } from './controllers/middleware/auth';
 import { LoggingService } from './services/logging';
+import { restaurantRouter } from './controllers/restaurant';
 
 export function setupRoutes(webServer: Express) {
   const logger = Container.get(LoggingService);
@@ -14,7 +15,8 @@ export function setupRoutes(webServer: Express) {
       stream: { write: (log) => logger.info(log) },
     }),
   );
-  webServer.use('/sign-in', authRouter);
+  webServer.use('/auth', authRouter);
   webServer.use('/accounts', Authenticate, accountRouter);
+  webServer.use('/restaurants', Authenticate, restaurantRouter);
   webServer.use(HandleErrors);
 }

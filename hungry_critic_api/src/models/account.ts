@@ -1,5 +1,4 @@
-import { Type } from 'class-transformer';
-import { Allow, IsDefined, IsEmail, IsEnum, MinLength, ValidateNested } from 'class-validator';
+import { Allow, IsDefined, IsEmail, IsEnum, MinLength } from 'class-validator';
 import { HashResult } from './internal';
 
 export enum SignInMethod {
@@ -22,14 +21,23 @@ export class Credentials {
 }
 
 export class Settings {
-
   hashedPassword: HashResult;
 
-  @Allow()
   blocked: boolean;
 
-  @Allow()
   attempts: number;
+
+  initialized: boolean;
+
+  method: SignInMethod;
+
+  constructor(password: HashResult, method: SignInMethod) {
+    this.hashedPassword = password;
+    this.blocked = false;
+    this.attempts = 0;
+    this.initialized = false;
+    this.method = method;
+  }
 }
 
 export enum UserRole {
@@ -38,13 +46,15 @@ export enum UserRole {
   ADMIN,
 }
 
-export class Account {
+export class Profile {
   @Allow()
   id: string;
 
   @Allow()
   name: string;
+}
 
+export class Account extends Profile {
   @IsEmail()
   email: string;
 
@@ -52,11 +62,6 @@ export class Account {
   @IsEnum(UserRole)
   role: UserRole;
   
-  @IsDefined()
-  @IsEnum(SignInMethod)
-  method: SignInMethod;
-  
-  @Allow()
   settings: Settings;
 }
 

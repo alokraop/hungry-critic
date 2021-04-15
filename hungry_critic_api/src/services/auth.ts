@@ -1,7 +1,15 @@
 import { Service } from 'typedi';
 import { APIError } from '../controllers/middleware/error';
 import { FirebaseAuthDao } from '../data/auth';
-import { Account, AuthReceipt, Credentials, SignInMethod } from '../models/account';
+import {
+  Account,
+  AuthReceipt,
+  Credentials,
+  Settings,
+  SignInMethod,
+  UserRole,
+} from '../models/account';
+import { TokenInfo } from '../models/internal';
 import { AccountService } from './account';
 import { HashingService } from './hash';
 import { LoggingService } from './logging';
@@ -17,14 +25,32 @@ export class AuthService {
     private hasher: HashingService,
   ) {}
 
+  async signUp(creds: Credentials): Promise<string> {
+    const id = this.hasher.simple(creds.identifier);
+    const account = await this.service.fetchInternal(id);
+    if (account) throw new APIError('An account with this identifier already exists!');
+    return this.createAccount(id, creds);
+  }
+
   async signIn(creds: Credentials): Promise<string> {
     const id = this.hasher.simple(creds.identifier);
-    const account = await this.service.fetch(id);
-    if (account) {
-      return this.verifyCreds(account, creds);
-    } else {
-      return this.createAccount(id, creds);
-    }
+    const account = await this.service.fetchInternal(id);
+    if (!account) throw new APIError("Can't sign into a non-existent account!");
+    return this.verifyCreds(account, creds);
+  }
+
+  private async createAccount(id: string, creds: Credentials): Promise<any> {
+    this.logger.debug('Creating new account', { accountId: id });
+    const success = await this.verify(creds);
+    if (!success) throw new APIError('You are not authorized to create this account!', 403);
+    const hashedPassword = await this.hasher.withSalt(creds.firebaseId);
+    const account = <Account>{
+      id,
+      role: UserRole.CUSTOMER,
+      settings: new Settings(hashedPassword, creds.method),
+    };
+    await this.service.create(account);
+    return this.makeReceipt(account, true);
   }
 
   private async verifyCreds(account: Account, creds: Credentials): Promise<any> {
@@ -36,30 +62,19 @@ export class AuthService {
       throw new APIError('The email or password you provided was incorrect');
     }
     if (settings.attempts > 0) return this.resetAttempts(account);
-    return this.makeReceipt(account.id, !account.name);
-  }
-
-  private async createAccount(id: string, creds: Credentials): Promise<any> {
-    this.logger.debug('Creating new account', { accountId: id });
-    const success = await this.verify(creds);
-    if (!success) throw new APIError('You are not authorized to create this account!', 403);
-    const hashedPassword = await this.hasher.withSalt(creds.firebaseId);
-    const settings = { blocked: false, attempts: 0, hashedPassword };
-    const account = <Account>{ id, method: creds.method, settings };
-    await this.service.create(account);
-    return this.makeReceipt(id, false);
+    return this.makeReceipt(account, !settings.initialized);
   }
 
   private async markFail(account: Account): Promise<any> {
     const settings = account.settings;
     settings.attempts += 1;
     if (settings.attempts === 3) settings.blocked = true;
-    return this.service.update(account);
+    return this.service.updateSettings(account.id, settings);
   }
 
   private async resetAttempts(account: Account): Promise<any> {
     account.settings.attempts = 0;
-    return this.service.update(account);
+    return this.service.updateSettings(account.id, account.settings);
   }
 
   async verify(creds: Credentials): Promise<boolean> {
@@ -79,7 +94,8 @@ export class AuthService {
     }
   }
 
-  private makeReceipt(id: string, fresh: boolean): AuthReceipt {
-    return { id, fresh, token: this.token.create(id) };
+  private makeReceipt(account: Account, fresh: boolean): AuthReceipt {
+    const info = <TokenInfo>{ id: account.id, role: account.role };
+    return { id: account.id, fresh, token: this.token.create(info) };
   }
 }

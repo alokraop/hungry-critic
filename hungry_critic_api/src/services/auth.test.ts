@@ -1,4 +1,4 @@
-import { AccountDao } from '../data/accounts';
+import { AccountDao } from '../data/account';
 import { FirebaseAuthDao } from '../data/auth';
 import { Account, Credentials } from '../models/account';
 import { HashResult } from '../models/internal';
@@ -27,15 +27,15 @@ describe('Sign up tests', () => {
     create.mockImplementation((_: string) => 'some-token');
 
     const dao = new FirebaseAuthDao();
-    const aService = new AccountService(new AccountDao());
     const logger = new LoggingService();
     const token = new TokenService(logger);
+    const aService = new AccountService(new AccountDao(), token);
     const hasher = new HashingService(logger);
     service = new AuthService(dao, aService, logger, token, hasher);
   });
 
   test('New Account', async () => {
-    const fetch = AccountService.prototype.fetch as jest.Mock;
+    const fetch = AccountService.prototype.fetchInternal as jest.Mock;
     fetch.mockImplementation((_: string) => undefined);
     const token = await service.signIn(creds);
     expect(token).toBe('some-token');
@@ -50,7 +50,7 @@ describe('Sign in tests', () => {
     const create = TokenService.prototype.create as jest.Mock;
     create.mockImplementation((_: string) => 'some-token');
 
-    const fetch = AccountService.prototype.fetch as jest.Mock;
+    const fetch = AccountService.prototype.fetchInternal as jest.Mock;
     fetch.mockImplementation((_: string) => {
       return <Account>{
         id: 'some-id',
@@ -64,9 +64,9 @@ describe('Sign in tests', () => {
     });
 
     const dao = new FirebaseAuthDao();
-    const aService = new AccountService(new AccountDao());
     const logger = new LoggingService();
     const token = new TokenService(logger);
+    const aService = new AccountService(new AccountDao(), token);
     const hasher = new HashingService(logger);
     service = new AuthService(dao, aService, logger, token, hasher);
   });
