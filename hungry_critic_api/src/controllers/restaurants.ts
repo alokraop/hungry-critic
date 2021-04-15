@@ -1,9 +1,10 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 
 import { Container } from 'typedi';
 import { Restaurant } from '../models/restaurant';
-import { RestaurantService } from '../services/restaurant';
+import { RestaurantService } from '../services/restaurants';
 import { Validate } from './middleware/validation';
+import { reviewRouter } from './reviews';
 
 export const restaurantRouter: Router = Router();
 
@@ -29,3 +30,12 @@ restaurantRouter.delete('/:id', async (req: Request, res: Response) => {
   await service().delete(req.params.id, res.locals.info);
   res.send();
 });
+
+restaurantRouter.use(
+  '/:rId/reviews',
+  (req: Request, res: Response, next: NextFunction) => {
+    res.locals.rId = req.params.rId;
+    next();
+  },
+  reviewRouter,
+);

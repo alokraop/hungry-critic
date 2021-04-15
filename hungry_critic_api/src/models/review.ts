@@ -1,19 +1,20 @@
-import { Allow, IsDefined, IsPositive } from "class-validator";
+import { Allow, IsDefined, IsPositive } from 'class-validator';
 
 export class Review {
+  @Allow()
+  author: string;
 
-    @Allow()
-    author: string;
+  @Allow()
+  restaurant: string;
 
-    @IsDefined()
-    restaurant: string;
+  @IsDefined()
+  @IsPositive()
+  rating: number;
 
-    @IsPositive()
-    rating: number;
+  @Allow()
+  review: string;
 
-    @Allow()
-    review: string;
-
-    @IsPositive()
-    timestamp: number;
+  @IsDefined()
+  @IsPositive()
+  timestamp: number;
 }

@@ -1,12 +1,12 @@
 import { Express } from 'express';
 import morgan from 'morgan';
 import Container from 'typedi';
-import { accountRouter } from './controllers/account';
+import { accountRouter } from './controllers/accounts';
 import { authRouter } from './controllers/auth';
 import { HandleErrors } from './controllers/middleware/error';
 import { Authenticate } from './controllers/middleware/auth';
 import { LoggingService } from './services/logging';
-import { restaurantRouter } from './controllers/restaurant';
+import { restaurantRouter } from './controllers/restaurants';
 
 export function setupRoutes(webServer: Express) {
   const logger = Container.get(LoggingService);

@@ -10,7 +10,7 @@ import {
   UserRole,
 } from '../models/account';
 import { TokenInfo } from '../models/internal';
-import { AccountService } from './account';
+import { AccountService } from './accounts';
 import { HashingService } from './hash';
 import { LoggingService } from './logging';
 import { TokenService } from './token';

@@ -1,7 +1,7 @@
 import { Allow, IsDefined, IsNumber } from 'class-validator';
+import { Review } from './review';
 
 export class Restaurant {
-
   @IsDefined()
   name: string;
 
@@ -28,4 +28,7 @@ export class RestaurantDetails extends Restaurant {
   @IsNumber()
   averageRating: number;
 
+  bestReview?: Review;
+
+  worstReview?: Review;
 }

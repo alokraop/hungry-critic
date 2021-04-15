@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 
 import { Container } from 'typedi';
 import { Account, Profile } from '../models/account';
-import { AccountService } from '../services/account';
+import { AccountService } from '../services/accounts';
 import { Validate } from './middleware/validation';
 
 export const accountRouter: Router = Router();

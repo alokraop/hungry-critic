@@ -1,6 +1,6 @@
 import { Service } from 'typedi';
 import { APIError } from '../controllers/middleware/error';
-import { AccountDao } from '../data/account';
+import { AccountDao } from '../data/accounts';
 import { Account, Profile, Settings, UserRole } from '../models/account';
 import { TokenInfo } from '../models/internal';
 import { TokenService } from './token';

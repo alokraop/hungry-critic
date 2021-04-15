@@ -1,8 +1,8 @@
-import { AccountDao } from '../data/account';
+import { AccountDao } from '../data/accounts';
 import { FirebaseAuthDao } from '../data/auth';
 import { Account, Credentials } from '../models/account';
 import { HashResult } from '../models/internal';
-import { AccountService } from './account';
+import { AccountService } from './accounts';
 import { AuthService } from './auth';
 import { HashingService } from './hash';
 import { LoggingService } from './logging';
