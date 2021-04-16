@@ -35,7 +35,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
     return Container(
-      color: _theme.primaryColor,
+      color: swatch[400],
       padding: EdgeInsets.symmetric(horizontal: 15),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

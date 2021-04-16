@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'colors.dart';
 
-class UnderlinedTextField extends StatefulWidget {
+class OutlinedTextField extends StatefulWidget {
   final FormFieldValidator<String>? validator;
   final GlobalKey<FormState>? state;
   final TextEditingController? controller;
@@ -16,7 +16,7 @@ class UnderlinedTextField extends StatefulWidget {
   final TextCapitalization caps;
   final bool obscure;
 
-  UnderlinedTextField({
+  OutlinedTextField({
     Key? key,
     this.isDense = true,
     this.validator,
@@ -31,10 +31,10 @@ class UnderlinedTextField extends StatefulWidget {
     this.maxLength,
   }) : super(key: key);
   @override
-  _UnderlinedTextFieldState createState() => _UnderlinedTextFieldState();
+  _OutlinedTextFieldState createState() => _OutlinedTextFieldState();
 }
 
-class _UnderlinedTextFieldState extends State<UnderlinedTextField> {
+class _OutlinedTextFieldState extends State<OutlinedTextField> {
   bool unsubmitted = false;
   @override
   Widget build(BuildContext context) {
@@ -52,6 +52,7 @@ class _UnderlinedTextFieldState extends State<UnderlinedTextField> {
           enabledBorder: _makeBorder(greySwatch[300]),
           focusedBorder: _makeBorder(theme.primaryColor),
           errorBorder: _makeBorder(theme.errorColor),
+          focusedErrorBorder: _makeBorder(theme.errorColor),
           errorStyle: TextStyle(color: theme.errorColor),
           isDense: widget.isDense,
         ),

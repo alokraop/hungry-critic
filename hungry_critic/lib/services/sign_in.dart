@@ -32,13 +32,23 @@ class SignUpService {
   late Account _account;
 
   Future authWithEmail(
-    String email,
-    String password, {
+    EmailData data, {
     Function(AuthStatus)? onAuto,
     required Function onManual,
     required Function(FirebaseAuthException) onError,
   }) async {
     Aspects.instance.log('AccountBloc -> authWithEmail');
+    if (data.create) {
+      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: data.email,
+        password: data.password,
+      );
+    } else {
+      final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: data.email,
+        password: data.password,
+      );
+    }
   }
 
   Future authWithSocial(SignInData info, Function(AuthStatus)? onAuto) async {
@@ -105,8 +115,8 @@ class SignUpService {
     }
 
     await bloc.save(_account);
-    if(receipt.fresh) {
-      if(info.method == SignInMethod.EMAIL) {
+    if (receipt.fresh) {
+      if (info.method == SignInMethod.EMAIL) {
         return user.emailVerified ? AuthStatus.NEW_ACCOUNT : AuthStatus.UNVERIFIED;
       } else {
         return AuthStatus.NEW_ACCOUNT;

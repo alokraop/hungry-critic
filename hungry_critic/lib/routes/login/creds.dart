@@ -1,17 +1,14 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
-import 'package:hungry_critic/apis/signIn.dart';
-import 'package:hungry_critic/models/account.dart';
-import 'package:hungry_critic/shared/aspects.dart';
-import 'package:hungry_critic/shared/colors.dart';
-import 'package:hungry_critic/shared/custom_text_fields.dart';
-import 'package:hungry_critic/shared/divider.dart';
 
+import '../../apis/signIn.dart';
+import '../../models/account.dart';
 import '../../services/sign_in.dart';
+import '../../shared/aspects.dart';
+import '../../shared/colors.dart';
+import '../../shared/custom_text_fields.dart';
+import '../../shared/divider.dart';
 
 const eReg =
     r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
@@ -26,21 +23,26 @@ class AuthInitPage extends StatefulWidget {
   final SignUpService service;
   final Function(bool) onAuto;
   final Function onManual;
+  final Function onDrop;
 
   AuthInitPage({
     Key? key,
     required this.service,
     required this.onAuto,
     required this.onManual,
+    required this.onDrop,
   }) : super(key: key);
 
   @override
   _AuthInitPageState createState() => _AuthInitPageState();
 }
 
-class _AuthInitPageState extends State<AuthInitPage> {
-  final _formKey = GlobalKey<FormState>();
+class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderStateMixin {
+  final _emailKey = GlobalKey<FormState>();
+  final _passKey = GlobalKey<FormState>();
   final _emailC = TextEditingController();
+  final _passC = TextEditingController();
+  final _cPassC = TextEditingController();
   bool _loading = false;
   bool unsubmitted = true;
 
@@ -51,6 +53,19 @@ class _AuthInitPageState extends State<AuthInitPage> {
 
   var _status = AuthStatus.NONE;
   bool _create = true;
+
+  late Animation<double> _methods;
+  late AnimationController _pass;
+
+  @override
+  void initState() {
+    super.initState();
+    _pass = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 400),
+    );
+    _methods = Tween(begin: 1.0, end: 0.0).animate(_pass);
+  }
 
   @override
   void didChangeDependencies() {
@@ -64,29 +79,17 @@ class _AuthInitPageState extends State<AuthInitPage> {
     return Stack(
       alignment: Alignment.topCenter,
       children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildTitle(),
-            SizedBox(height: 20),
-            _buildEmailLogin(),
-            SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: LabelDivider(
-                color: greySwatch[500],
-                content: Text(
-                  _create ? 'or sign-up with' : 'or sign-in with',
-                  style: _theme.textTheme.bodyText2?.copyWith(
-                    color: _theme.primaryColor,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-            _buildSocial(),
-          ],
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: _screen.width * 0.075),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildTitle(),
+              SizedBox(height: 20),
+              _buildMethods(),
+              _buildPasswords(),
+            ],
+          ),
         ),
         Padding(
           padding: EdgeInsets.symmetric(vertical: 10),
@@ -94,6 +97,116 @@ class _AuthInitPageState extends State<AuthInitPage> {
         ),
       ],
     );
+  }
+
+  Widget _buildMethods() {
+    return SizeTransition(
+      sizeFactor: _methods,
+      child: Form(
+        key: _emailKey,
+        child: Column(
+          children: [
+            _buildEmailLogin(),
+            SizedBox(height: 10),
+            LabelDivider(
+              color: greySwatch[500],
+              content: Text(
+                _create ? 'or sign-up with' : 'or sign-in with',
+                style: _theme.textTheme.bodyText2?.copyWith(
+                  color: _theme.primaryColor,
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            _buildSocial(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswords() {
+    return SizeTransition(
+      sizeFactor: _pass,
+      child: Form(
+        key: _passKey,
+        child: SizedBox(
+          width: _screen.width * 0.85,
+          child: Column(
+            children: [
+              OutlinedTextField(
+                key: ValueKey('password'),
+                state: _emailKey,
+                controller: _passC,
+                hintText: 'Password',
+                prefixIcon: Icon(Icons.lock_outline),
+                caps: TextCapitalization.none,
+                maxLength: 20,
+                validator: _validatePassword,
+                obscure: true,
+              ),
+              SizedBox(height: 10),
+              if (_create)
+                OutlinedTextField(
+                  key: ValueKey('confirmPassword'),
+                  state: _emailKey,
+                  controller: _cPassC,
+                  hintText: 'Confirm Password',
+                  prefixIcon: Icon(Icons.lock_outline),
+                  caps: TextCapitalization.none,
+                  maxLength: 20,
+                  validator: _validatePassword,
+                  obscure: true,
+                ),
+              if (_create) SizedBox(height: 15),
+              SizedBox(
+                height: 45,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    FloatingActionButton.extended(
+                      key: ValueKey('start-auth'),
+                      label: _loading
+                          ? SizedBox(
+                              height: 30,
+                              width: 30,
+                              child: CircularProgressIndicator(
+                                backgroundColor: greySwatch[50],
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : Text(
+                              _create ? 'SIGN UP' : 'SIGN IN',
+                              style: _theme.textTheme.bodyText1?.copyWith(color: greySwatch[50]),
+                            ),
+                      elevation: 4,
+                      backgroundColor: _theme.primaryColor,
+                      onPressed: _authWithEmail,
+                    ),
+                    FloatingActionButton.extended(
+                      key: ValueKey('cancel'),
+                      label: Text(
+                        'CANCEL',
+                        style: _theme.textTheme.bodyText1?.copyWith(color: greySwatch[50]),
+                      ),
+                      elevation: 2,
+                      backgroundColor: greySwatch[300],
+                      onPressed: _showMethods,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  _authWithEmail() {
+    widget.onDrop();
   }
 
   Widget _buildTitle() {
@@ -117,36 +230,33 @@ class _AuthInitPageState extends State<AuthInitPage> {
   }
 
   _buildEmailLogin() {
-    return SizedBox(
-      width: _screen.width * 0.85,
-      child: Row(
-        children: [
-          Expanded(
-            child: UnderlinedTextField(
-              key: ValueKey('username'),
-              state: _formKey,
-              controller: _emailC,
-              hintText: 'Email address',
-              prefixIcon: Icon(
-                Icons.email,
-              ),
-              caps: TextCapitalization.none,
-              maxLength: 50,
-              validator: _validateEmail,
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedTextField(
+            key: ValueKey('username'),
+            state: _emailKey,
+            controller: _emailC,
+            hintText: 'Email address',
+            prefixIcon: Icon(
+              Icons.email,
             ),
+            caps: TextCapitalization.none,
+            maxLength: 50,
+            validator: _validateEmail,
           ),
-          SizedBox(width: 10),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 50),
-            child: FloatingActionButton(
-              key: ValueKey('submitPhoneNumber'),
-              onPressed: _authWithEmail,
-              child: Icon(Icons.arrow_forward),
-              backgroundColor: _theme.primaryColor,
-            ),
+        ),
+        SizedBox(width: 10),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 50),
+          child: FloatingActionButton(
+            key: ValueKey('submitPhoneNumber'),
+            onPressed: _startEmailFlow,
+            child: Icon(Icons.arrow_upward),
+            backgroundColor: _theme.primaryColor,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -260,8 +370,6 @@ class _AuthInitPageState extends State<AuthInitPage> {
 
   _toggleCreate() => setState(() => _create = !_create);
 
-  _authWithEmail() {}
-
   _authWithSocial(SignInMethod method) async {
     _onError(e) => _showError(e, method);
     if (_loading) return;
@@ -346,6 +454,15 @@ class _AuthInitPageState extends State<AuthInitPage> {
     );
   }
 
+  _startEmailFlow() {
+    widget.onDrop();
+    if (_emailKey.currentState?.validate() ?? false) _pass.forward();
+  }
+
+  _showMethods() {
+    _pass.reverse();
+  }
+
   String? _validateEmail(String? value) {
     value ??= '';
     if (!RegExp(eReg).hasMatch(value)) return 'Invalid email address';
@@ -353,6 +470,15 @@ class _AuthInitPageState extends State<AuthInitPage> {
     if (_status == AuthStatus.DUPLICATE) {
       _status = AuthStatus.NONE;
       return 'This email already has an account!';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value?.isEmpty ?? true) return 'Password cannot be empty';
+    if (_status == AuthStatus.INCORRECT_CREDS) {
+      _status = AuthStatus.NONE;
+      return 'Incorrect password!';
     }
     return null;
   }

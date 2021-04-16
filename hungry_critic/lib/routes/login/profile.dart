@@ -99,7 +99,7 @@ class _EditProfileState extends State<EditProfile> {
       children: [
         Text('Your info:', style: _theme.textTheme.headline5),
         SizedBox(height: 20),
-        UnderlinedTextField(
+        OutlinedTextField(
           state: _formKey,
           controller: _nameC,
           hintText: 'Your name',

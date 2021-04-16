@@ -4,6 +4,16 @@ part 'account.g.dart';
 
 enum SignInMethod { EMAIL, GOOGLE, FACEBOOK }
 
+class EmailData {
+  final String email;
+
+  final String password;
+
+  final bool create;
+
+  EmailData(this.email, this.password, this.create);
+}
+
 class SignInData {
   bool create;
 
