@@ -12,12 +12,21 @@ import '../blocs/account.dart';
 import '../models/account.dart';
 import '../shared/aspects.dart';
 
-class SocialData {
+class SignInData {
   final String id;
-  final AuthCredential cred;
+
+  bool create;
+
+  SignInMethod method;
+
   final String? email;
 
-  SocialData(this.id, this.cred, [this.email]);
+  SignInData(
+    this.id,
+    this.method, {
+    this.create = true,
+    this.email,
+  });
 }
 
 class SignUpService {
@@ -31,39 +40,55 @@ class SignUpService {
 
   late Account _account;
 
-  Future authWithEmail(
-    EmailData data, {
-    Function(AuthStatus)? onAuto,
-    required Function onManual,
-    required Function(FirebaseAuthException) onError,
-  }) async {
+  EmailData? _data;
+
+  StreamSubscription<User?>? _sub;
+
+  Future<AuthStatus> authWithEmail(EmailData data) async {
     Aspects.instance.log('AccountBloc -> authWithEmail');
-    if (data.create) {
-      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+    final cred = await _makeCred(data);
+    final user = cred.user;
+    if (user == null) return AuthStatus.ERROR;
+    if (user.emailVerified) {
+      final info = SignInData(
+        data.email,
+        SignInMethod.EMAIL,
+        create: data.create,
         email: data.email,
-        password: data.password,
       );
+      return authenticate(info, user);
     } else {
-      final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: data.email,
-        password: data.password,
-      );
+      _data = data;
+      await user.sendEmailVerification();
+      return AuthStatus.UNVERIFIED;
     }
   }
 
-  Future authWithSocial(SignInData info, Function(AuthStatus)? onAuto) async {
+  Future<UserCredential> _makeCred(EmailData data) {
+    return data.create
+        ? _auth.createUserWithEmailAndPassword(
+            email: data.email,
+            password: data.password,
+          )
+        : _auth.signInWithEmailAndPassword(
+            email: data.email,
+            password: data.password,
+          );
+  }
+
+  Future<AuthStatus> authWithSocial(SignInMethod method, bool create) async {
     Aspects.instance.log('AccountBloc -> authWithSocial');
 
     final auth = {
       SignInMethod.GOOGLE: authWithGoogle,
       SignInMethod.FACEBOOK: authWithFacebook,
-    }[info.method];
+    }[method];
 
     if (auth == null) throw PlatformException(code: 'UNKNOWN_METHOD');
-    return signIn(info, await auth()).then((status) => onAuto?.call(status));
+    return auth(create);
   }
 
-  Future<SocialData> authWithGoogle() async {
+  Future<AuthStatus> authWithGoogle(bool create) async {
     Aspects.instance.log('AccountBloc -> authWithGoogle');
     final gAuth = GoogleSignIn();
     final gAccount = await gAuth.signIn();
@@ -78,10 +103,17 @@ class SignUpService {
       idToken: authInfo.idToken,
       accessToken: authInfo.accessToken,
     );
-    return SocialData(gAccount.id, cred, gAccount.email);
+    final uCred = await _createUser(cred);
+    final data = SignInData(
+      gAccount.id,
+      SignInMethod.GOOGLE,
+      create: create,
+      email: gAccount.email,
+    );
+    return authenticate(data, uCred.user);
   }
 
-  Future<SocialData> authWithFacebook() async {
+  Future<AuthStatus> authWithFacebook(bool create) async {
     final result = await FacebookAuth.instance.login();
     final accessToken = result.accessToken;
     if (result.status != LoginStatus.success || accessToken == null) {
@@ -91,20 +123,20 @@ class SignUpService {
       );
     }
     final cred = FacebookAuthProvider.credential(accessToken.token);
-    return SocialData(accessToken.userId, cred);
+    final uCred = await _createUser(cred);
+    final info = SignInData(accessToken.userId, SignInMethod.FACEBOOK, create: create);
+    return authenticate(info, uCred.user);
   }
 
-  Future<AuthStatus> signIn(SignInData info, SocialData data) async {
-    final user = await _createUser(data.cred);
+  Future<AuthStatus> authenticate(SignInData info, User? user) async {
     if (user == null) throw Exception('Could not create!');
-
-    final creds = Credentials(info.method, data.id, user.uid);
+    final creds = Credentials(info.method, info.id, user.uid);
     final api = SignInApi(bloc.config);
     final receipt = await (info.create ? api.signUp(creds) : api.signIn(creds));
     _account = Account(
       id: receipt.id,
       method: creds.method,
-      email: data.email,
+      email: info.email,
     )..token = receipt.token;
 
     final aApi = AccountApi(bloc.config, receipt.token);
@@ -113,23 +145,30 @@ class SignUpService {
       if (oldAccount == null) throw Exception('Couldn\t fetch account!');
       _account.update(oldAccount);
     }
-
     await bloc.save(_account);
-    if (receipt.fresh) {
-      if (info.method == SignInMethod.EMAIL) {
-        return user.emailVerified ? AuthStatus.NEW_ACCOUNT : AuthStatus.UNVERIFIED;
-      } else {
-        return AuthStatus.NEW_ACCOUNT;
-      }
+    return receipt.fresh ? AuthStatus.NEW_ACCOUNT : AuthStatus.EXISTING_ACCOUNT;
+  }
+
+  Future<AuthStatus> retryAuth() async {
+    final data = _data;
+    if (data == null) return AuthStatus.ERROR;
+    data.create = false;
+    final cred = await _makeCred(data);
+    final user = cred.user;
+    if (user == null) return AuthStatus.ERROR;
+    if (user.emailVerified) {
+      final info = SignInData(data.email, SignInMethod.EMAIL, email: data.email);
+      return authenticate(info, user);
     } else {
-      return AuthStatus.EXISTING_ACCOUNT;
+      return AuthStatus.UNVERIFIED;
     }
   }
 
-  Future<User?> _createUser(AuthCredential cred) async {
-    final result = await _auth.signInWithCredential(cred);
-    return result.user;
+  Future<UserCredential> _createUser(AuthCredential cred) {
+    return _auth.signInWithCredential(cred);
   }
 
-  isVerified() {}
+  dispose() {
+    _sub?.cancel();
+  }
 }

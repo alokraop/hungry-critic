@@ -199,7 +199,7 @@ class _EditProfileState extends State<EditProfile> {
       setState(() => _loading = true);
       final account = widget.bloc.account;
       return widget.bloc
-          .update(account.copyWith(name: _nameC.text, role: _role))
+          .initProfile(account.copyWith(name: _nameC.text, role: _role))
           .then((_) => widget.onDone());
     } else {
       setState(() => _mode = AutovalidateMode.onUserInteraction);

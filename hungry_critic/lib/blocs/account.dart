@@ -38,6 +38,16 @@ class AccountBloc {
     return _account?.name != null;
   }
 
+  Future initProfile(Account changes) {
+    account.update(changes);
+    _publish(account);
+
+    return Future.wait([
+      _provider.save(account),
+      _api.initProfile(account),
+    ]);
+  }
+
   Future update(Account changes) {
     account.update(changes);
     _publish(account);
@@ -64,4 +74,6 @@ class AccountBloc {
     _api = AccountApi(config, account.token);
     return _provider.save(account);
   }
+
+  Future logout() => _provider.delete();
 }

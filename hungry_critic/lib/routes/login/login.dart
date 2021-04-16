@@ -59,7 +59,11 @@ class _LoginScreensState extends State<LoginScreens> {
                   onAuto: initProfile,
                   onDrop: _dropKeyboard,
                 );
-                final two = VerifyScreen(service: _service, onNext: nextPage);
+                final two = VerifyScreen(
+                  service: _service,
+                  onDone: initProfile,
+                  onCancel: restart,
+                );
                 final three = EditTab(bloc: widget.bloc, onDone: doLogin, onCancel: restart);
                 final pageMap = {
                   0: one,

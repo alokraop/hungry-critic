@@ -1,7 +1,6 @@
 import 'dart:convert';
 
-import 'package:hungry_critic/models/account.dart';
-
+import '../models/account.dart';
 import '../shared/config.dart';
 import '../shared/http_utils.dart' as http;
 
@@ -18,15 +17,19 @@ class AccountApi {
 
   final Map<String, String> headers;
 
-  Future<Account?> fetchAccount(String? id) async {
-    if (id == null) return null;
-    final response = await http.get(url(), headers: headers);
+  Future<Account?> fetchAccount(String id) async {
+    final response = await http.get(url(id), headers: headers);
     if (response == null) return null;
     return Account.fromJson(jsonDecode(response));
   }
 
+  Future<void> initProfile(Account account) async {
+    final body = jsonEncode(account);
+    await http.post(url(), headers: headers, body: body);
+  }
+
   Future<void> updateAccount(Account account) async {
     final body = jsonEncode(account);
-    await http.put(url(), headers: headers, body: body);
+    await http.put(url(account.id), headers: headers, body: body);
   }
 }

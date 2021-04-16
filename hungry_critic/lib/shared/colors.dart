@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 class GreySwatch extends ColorSwatch<int> {
   const GreySwatch(this.base, this.swatch) : super(base, swatch);
@@ -8,9 +8,11 @@ class GreySwatch extends ColorSwatch<int> {
   final Map<int, Color> swatch;
 
   Color operator [](int index) => swatch[index] ?? Color(base);
+
+  MaterialColor get material => MaterialColor(this.value, swatch);
 }
 
-final greySwatch = GreySwatch(
+const greySwatch = GreySwatch(
   0xff4a6572,
   <int, Color>{
     50: Color(0xffffffff),
@@ -26,7 +28,7 @@ final greySwatch = GreySwatch(
   },
 );
 
-final swatch = GreySwatch(
+const swatch = GreySwatch(
   0xffDE2B3A,
   <int, Color>{
     50: Color(0xffEC838C),

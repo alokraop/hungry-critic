@@ -82,7 +82,7 @@ export class AuthService {
     switch (creds.method) {
       case SignInMethod.EMAIL:
         //TODO: Better verification once start using firebase email on app
-        record.emailVerified && record.email === creds.identifier;
+        return record.emailVerified && record.email === creds.identifier;
       case SignInMethod.GOOGLE:
         return record.providerData
           .filter((i) => i.providerId === 'google.com')

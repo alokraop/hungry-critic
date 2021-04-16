@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hungry_critic/shared/social_button.dart';
 
 import '../../apis/signIn.dart';
 import '../../models/account.dart';
@@ -12,12 +13,6 @@ import '../../shared/divider.dart';
 
 const eReg =
     r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${this.substring(1)}";
-  }
-}
 
 class AuthInitPage extends StatefulWidget {
   final SignUpService service;
@@ -40,6 +35,7 @@ class AuthInitPage extends StatefulWidget {
 class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderStateMixin {
   final _emailKey = GlobalKey<FormState>();
   final _passKey = GlobalKey<FormState>();
+
   final _emailC = TextEditingController();
   final _passC = TextEditingController();
   final _cPassC = TextEditingController();
@@ -92,7 +88,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
           ),
         ),
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 10),
+          padding: EdgeInsets.symmetric(vertical: 15),
           child: _buildSwap(),
         ),
       ],
@@ -156,7 +152,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
                   prefixIcon: Icon(Icons.lock_outline),
                   caps: TextCapitalization.none,
                   maxLength: 20,
-                  validator: _validatePassword,
+                  validator: _validateConfirm,
                   obscure: true,
                 ),
               if (_create) SizedBox(height: 15),
@@ -203,10 +199,6 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
         ),
       ),
     );
-  }
-
-  _authWithEmail() {
-    widget.onDrop();
   }
 
   Widget _buildTitle() {
@@ -270,78 +262,15 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
             alignment: WrapAlignment.center,
             runSpacing: 7.5,
             children: [
-              _socialButton(
-                SignInMethod.GOOGLE,
-                greySwatch[50],
-                greySwatch[500],
-                greySwatch[800].withOpacity(0.4),
-              ),
+              SocialButton(method: SignInMethod.GOOGLE, onTap: _authWithSocial),
               SizedBox(width: 15),
-              _socialButton(
-                SignInMethod.FACEBOOK,
-                Color(0xff3b5998),
-                greySwatch[50],
-                greySwatch[800].withOpacity(0.6),
-              ),
+              SocialButton(method: SignInMethod.FACEBOOK, onTap: _authWithSocial),
             ],
           ),
         ),
         SizedBox(height: 7.5),
         _showSocialError(),
       ],
-    );
-  }
-
-  _socialButton(
-    SignInMethod method,
-    Color bColor,
-    Color fColor,
-    Color sColor,
-  ) {
-    final imageName = describeEnum(method).toLowerCase();
-    final label = imageName.capitalize();
-    return GestureDetector(
-      onTap: () => _authWithSocial(method),
-      child: Container(
-        width: _screen.width * 0.325,
-        padding: EdgeInsets.symmetric(vertical: 7.5, horizontal: 10),
-        decoration: BoxDecoration(
-          color: bColor,
-          borderRadius: BorderRadius.circular(7.5),
-          boxShadow: [
-            BoxShadow(
-              color: greySwatch[800].withOpacity(0.4),
-              blurRadius: 3,
-              offset: Offset(2, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                'assets/images/logos/${imageName}_signin.png',
-                height: 27.5,
-              ),
-            ),
-            Flexible(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '$label',
-                    style: _theme.textTheme.bodyText1?.copyWith(
-                      fontFamily: 'Roboto',
-                      color: fColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -366,59 +295,6 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
         )
       ],
     );
-  }
-
-  _toggleCreate() => setState(() => _create = !_create);
-
-  _authWithSocial(SignInMethod method) async {
-    _onError(e) => _showError(e, method);
-    if (_loading) return;
-    FocusScope.of(context).requestFocus(new FocusNode());
-    _loading = true;
-    setState(() {});
-    final data = SignInData(_create, method);
-    widget.service.authWithSocial(data, _onSuccess).catchError(_onError);
-  }
-
-  _showError(Object exception, SignInMethod method) {
-    Aspects.instance.log('AuthInitPage -> error');
-    _loading = false;
-    _method = method;
-    switch (method) {
-      case SignInMethod.GOOGLE:
-        if (exception is PlatformException && exception.code == 'SIGN_IN_CANCELED') {
-          Aspects.instance.log('Login -> $method -> Canceled');
-        }
-        if (exception is LoginException) {
-          Aspects.instance.log('Login -> $method -> Fail');
-          switch (exception.status) {
-            case 400:
-              if (_create) _status = AuthStatus.DUPLICATE;
-              break;
-          }
-        } else {
-          Aspects.instance.recordError(exception);
-          _status = AuthStatus.ERROR;
-        }
-        break;
-      default:
-    }
-    setState(() {});
-  }
-
-  _onSuccess(AuthStatus status) {
-    switch (status) {
-      case AuthStatus.UNVERIFIED:
-        widget.onManual();
-        break;
-      case AuthStatus.NEW_ACCOUNT:
-        widget.onAuto(true);
-        break;
-      case AuthStatus.EXISTING_ACCOUNT:
-        widget.onAuto(false);
-        break;
-      default:
-    }
   }
 
   Widget _showSocialError() {
@@ -454,6 +330,70 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
     );
   }
 
+  _toggleCreate() => setState(() => _create = !_create);
+
+  _authWithEmail() {
+    _onError(e) => _handleError(e, SignInMethod.EMAIL);
+    if (_loading) return;
+    widget.onDrop();
+    _loading = true;
+    setState(() {});
+    if (_passKey.currentState?.validate() ?? false) {
+      final data = EmailData(_emailC.text, _passC.text, _create);
+      widget.service.authWithEmail(data).then(_onSuccess).catchError(_onError);
+    }
+  }
+
+  _authWithSocial(SignInMethod method) async {
+    _onError(e) => _handleError(e, method);
+    if (_loading) return;
+    widget.onDrop();
+    _loading = true;
+    setState(() {});
+    widget.service.authWithSocial(method, _create).then(_onSuccess).catchError(_onError);
+  }
+
+  _onSuccess(AuthStatus status) {
+    switch (status) {
+      case AuthStatus.UNVERIFIED:
+        widget.onManual();
+        break;
+      case AuthStatus.NEW_ACCOUNT:
+        widget.onAuto(true);
+        break;
+      case AuthStatus.EXISTING_ACCOUNT:
+        widget.onAuto(false);
+        break;
+      default:
+    }
+  }
+
+  _handleError(Object exception, SignInMethod method) {
+    Aspects.instance.log('AuthInitPage -> error');
+    _loading = false;
+    _method = method;
+    switch (method) {
+      case SignInMethod.GOOGLE:
+        if (exception is PlatformException && exception.code == 'SIGN_IN_CANCELED') {
+          Aspects.instance.log('Login -> $method -> Canceled');
+        }
+        if (exception is LoginException) {
+          Aspects.instance.log('Login -> $method -> Fail');
+          switch (exception.status) {
+            case 400:
+              if (_create) _status = AuthStatus.DUPLICATE;
+              break;
+          }
+        } else {
+          Aspects.instance.recordError(exception);
+          _status = AuthStatus.ERROR;
+        }
+        break;
+      default:
+    }
+    setState(() {});
+  }
+
   _startEmailFlow() {
     widget.onDrop();
     if (_emailKey.currentState?.validate() ?? false) _pass.forward();
@@ -481,5 +421,10 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
       return 'Incorrect password!';
     }
     return null;
+  }
+
+  String? _validateConfirm(String? value) {
+    if (!_create) return null;
+    return value == _passC.text ? null : 'Not the same as password';
   }
 }

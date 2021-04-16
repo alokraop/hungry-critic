@@ -9,17 +9,9 @@ class EmailData {
 
   final String password;
 
-  final bool create;
-
-  EmailData(this.email, this.password, this.create);
-}
-
-class SignInData {
   bool create;
 
-  SignInMethod method;
-
-  SignInData(this.create, this.method);
+  EmailData(this.email, this.password, this.create);
 }
 
 enum UserRole { CUSTOMER, OWNER, ADMIN }

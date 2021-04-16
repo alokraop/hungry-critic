@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:hungry_critic/blocs/account.dart';
 
-import 'routes/home/home.dart';
+import 'routes/home.dart';
 import 'shared/config.dart';
 
 class MainRouter extends StatefulWidget {
   MainRouter({
     required this.theme,
+    required this.bloc,
     required this.config,
-    required this.onLogOut,
+    required this.onLogout,
   });
 
   final ThemeData theme;
 
+  final AccountBloc bloc;
+
   final AppConfig config;
 
-  final Function() onLogOut;
+  final Function() onLogout;
 
   @override
   _MainRouterState createState() => _MainRouterState();
@@ -36,7 +40,7 @@ class _MainRouterState extends State<MainRouter> {
     final routes = {
       '/': () => MaterialPageRoute(
             settings: s,
-            builder: (c) => HomeScreen(onDelete: widget.onLogOut),
+            builder: (c) => HomeScreen(bloc: widget.bloc, onLogout: widget.onLogout),
           ),
     };
     return routes[s.name]?.call();

@@ -1,8 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hungry_critic/shared/colors.dart';
 
 import 'blocs/account.dart';
+import 'blocs/restaurant.dart';
 import 'router.dart';
 import 'routes/login/login.dart';
 import 'shared/aspects.dart';
@@ -12,7 +14,8 @@ import 'shared/context.dart';
 final theme = ThemeData(
   brightness: Brightness.light,
   fontFamily: 'NotoSans',
-  primaryColor: Color(0xffDE2B3A),
+  primaryColor: swatch,
+  primarySwatch: swatch.material,
   textTheme: TextTheme(
     subtitle1: TextStyle(
       debugLabel: 'stock subTitle',
@@ -35,7 +38,6 @@ final theme = ThemeData(
       fontSize: 12,
       decoration: TextDecoration.none,
     ),
-
   ),
 );
 
@@ -95,16 +97,20 @@ class _HungryCriticState extends State<HungryCritic> {
     setState(() => _loggedIn = true);
   }
 
+  _onLogout() {
+    setState(() => _loggedIn = false);
+  }
+
   _buildApp() {
     return BlocsContainer(
       aBloc: _self,
+      rBloc: RestaurantBloc(_self),
       child: MainRouter(
         theme: theme,
+        bloc: _self,
         config: widget.config,
-        onLogOut: _onLogout,
+        onLogout: _onLogout,
       ),
     );
   }
-
-  _onLogout() => setState(() => _loggedIn = false);
 }

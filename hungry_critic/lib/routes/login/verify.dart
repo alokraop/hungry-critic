@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/account.dart';
 import '../../services/sign_in.dart';
 import '../../shared/colors.dart';
 
@@ -7,12 +8,15 @@ class VerifyScreen extends StatefulWidget {
   const VerifyScreen({
     Key? key,
     required this.service,
-    required this.onNext,
+    required this.onDone,
+    required this.onCancel,
   }) : super(key: key);
 
   final SignUpService service;
 
-  final Function() onNext;
+  final Function(bool) onDone;
+
+  final Function() onCancel;
 
   @override
   _VerifyScreenState createState() => _VerifyScreenState();
@@ -55,12 +59,12 @@ class _VerifyScreenState extends State<VerifyScreen> {
                   children: [
                     Icon(
                       Icons.error,
-                      color: _theme.errorColor,
+                      color: greySwatch[50],
                     ),
                     SizedBox(width: 5),
                     Text(
                       'Your email hasn\'t yet been verified!',
-                      style: _theme.textTheme.subtitle2?.copyWith(color: _theme.errorColor),
+                      style: _theme.textTheme.subtitle2?.copyWith(color: greySwatch[50]),
                       textAlign: TextAlign.center,
                     )
                   ],
@@ -94,13 +98,21 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
   _fetchToken() async {
     setState(() => _loading = true);
-    final success = await widget.service.isVerified();
-    if (success) {
-      widget.onNext();
-    } else {
-      _loading = false;
-      _fail = true;
-      setState(() {});
+    final status = await widget.service.retryAuth();
+    switch (status) {
+      case AuthStatus.NEW_ACCOUNT:
+        widget.onDone(true);
+        break;
+      case AuthStatus.EXISTING_ACCOUNT:
+        widget.onDone(false);
+        break;
+      case AuthStatus.UNVERIFIED:
+        _loading = false;
+        _fail = true;
+        setState(() {});
+        break;
+      default:
+        widget.onCancel();
     }
   }
 }
