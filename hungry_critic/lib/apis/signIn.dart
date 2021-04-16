@@ -5,7 +5,9 @@ import '../shared/config.dart';
 import '../shared/http_utils.dart' as http;
 
 class LoginException implements Exception {
-  LoginException(this.message);
+  LoginException(this.status, this.message);
+
+  final int status;
 
   final String message;
 
@@ -17,24 +19,30 @@ class SignInApi {
 
   final AppConfig? _config;
 
-  UriCreator get url => _config!.http.withBase('sign-in');
+  UriCreator get url => _config!.http.withBase('auth');
 
   final headers = {'Content-Type': 'application/json'};
 
-  Future<AuthReceipt> signIn(Credentials creds) async {
+  Future<AuthReceipt> signUp(Credentials creds) {
+    return auth(creds, 'sign-up');
+  }
+
+  Future<AuthReceipt> signIn(Credentials creds) {
+    return auth(creds, 'sign-in');
+  }
+
+  Future<AuthReceipt> auth(Credentials creds, String method) async {
     final response = await http.rawPost(
-      url(),
+      url(method),
       headers: headers,
       body: jsonEncode(creds),
     );
-    if (_knownStatus(response.statusCode)) {
+    if (response.statusCode == 201) {
       final receipt = AuthReceipt.fromJson(jsonDecode(response.body));
       headers['token'] = receipt.token;
       return receipt;
     } else {
-      throw LoginException('Couldn\'t sign in: ${response.body}');
+      throw LoginException(response.statusCode, 'Couldn\'t sign in: ${response.body}');
     }
   }
-
-  bool _knownStatus(int status) => status == 201 || status == 400;
 }

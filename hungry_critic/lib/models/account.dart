@@ -4,6 +4,14 @@ part 'account.g.dart';
 
 enum SignInMethod { EMAIL, GOOGLE, FACEBOOK }
 
+class SignInData {
+  bool create;
+
+  SignInMethod method;
+
+  SignInData(this.create, this.method);
+}
+
 enum UserRole { CUSTOMER, OWNER, ADMIN }
 
 _encodeMethod(SignInMethod method) => method.index;
@@ -112,9 +120,11 @@ class Account {
 
 enum AuthStatus {
   NONE,
-  SUCCESS,
+  NEW_ACCOUNT,
+  EXISTING_ACCOUNT,
   DUPLICATE,
   NO_ACCOUNT,
   UNVERIFIED,
   INCORRECT_CREDS,
+  ERROR
 }

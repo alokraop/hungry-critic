@@ -22,6 +22,23 @@ final greySwatch = GreySwatch(
     600: Color(0xff4c4c4c),
     700: Color(0xff333333),
     800: Color(0xff191919),
-    900: Color(0xff000000)
+    900: Color(0xff000000),
+  },
+);
+
+final swatch = GreySwatch(
+  0xffDE2B3A,
+  <int, Color>{
+    50: Color(0xffEC838C),
+    100: Color(0xffE9727C),
+    200: Color(0xffE6606B),
+    300: Color(0xffE34F5B),
+    400: Color(0xffE13D4B),
+    500: Color(0xffDE2B3A),
+    600: Color(0xffD42130),
+    700: Color(0xffC21E2C),
+    800: Color(0xffB01C28),
+    900: Color(0xff9F1924),
+
   },
 );

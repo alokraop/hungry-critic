@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hungry_critic/shared/colors.dart';
 
 import '../../blocs/account.dart';
 import '../../services/sign_in.dart';
-import '../profile/edit.dart';
+import 'profile.dart';
 import 'creds.dart';
 import 'verify.dart';
 
@@ -22,8 +21,6 @@ class LoginScreens extends StatefulWidget {
 }
 
 class _LoginScreensState extends State<LoginScreens> {
-  late ThemeData _theme;
-
   late SignUpService _service;
 
   final _controller = PageController(keepPage: false);
@@ -39,12 +36,6 @@ class _LoginScreensState extends State<LoginScreens> {
 
   _initService() {
     _service = SignUpService(widget.bloc);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _theme = Theme.of(context);
   }
 
   @override
@@ -68,7 +59,7 @@ class _LoginScreensState extends State<LoginScreens> {
                   onAuto: initProfile,
                 );
                 final two = VerifyScreen(service: _service, onNext: nextPage);
-                final three = EditProfile(bloc: widget.bloc, onDone: doLogin);
+                final three = EditTab(bloc: widget.bloc, onDone: doLogin, onCancel: restart);
                 final pageMap = {
                   0: one,
                   1: _needsVerify ? two : three,
@@ -83,11 +74,13 @@ class _LoginScreensState extends State<LoginScreens> {
     );
   }
 
-  Future<void> initProfile() async {
-    setState(() {
-      _needsVerify = false;
-    });
-    nextPage();
+  Future<void> initProfile(bool fresh) async {
+    if (fresh) {
+      setState(() => _needsVerify = false);
+      nextPage();
+    } else {
+      doLogin();
+    }
   }
 
   doLogin() async {

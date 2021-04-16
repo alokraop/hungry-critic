@@ -12,7 +12,7 @@ import 'shared/context.dart';
 final theme = ThemeData(
   brightness: Brightness.light,
   fontFamily: 'NotoSans',
-  primaryColor: Color(0xffcb202d),
+  primaryColor: Color(0xffDE2B3A),
   textTheme: TextTheme(
     subtitle1: TextStyle(
       debugLabel: 'stock subTitle',
@@ -32,9 +32,10 @@ final theme = ThemeData(
     ),
     caption: TextStyle(
       debugLabel: 'stock badge',
-      fontSize: 13,
+      fontSize: 12,
       decoration: TextDecoration.none,
     ),
+
   ),
 );
 

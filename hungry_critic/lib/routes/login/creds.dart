@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:hungry_critic/apis/signIn.dart';
 import 'package:hungry_critic/models/account.dart';
 import 'package:hungry_critic/shared/aspects.dart';
 import 'package:hungry_critic/shared/colors.dart';
@@ -23,7 +24,7 @@ extension StringExtension on String {
 
 class AuthInitPage extends StatefulWidget {
   final SignUpService service;
-  final Function onAuto;
+  final Function(bool) onAuto;
   final Function onManual;
 
   AuthInitPage({
@@ -44,24 +45,12 @@ class _AuthInitPageState extends State<AuthInitPage> {
   bool unsubmitted = true;
 
   SignInMethod? _method;
-  bool _invalidInput = false;
-  bool _connectionFailure = false;
-
-  bool _hasFocus = false;
-  late StreamSubscription<bool> _sub;
 
   late ThemeData _theme;
   late Size _screen;
 
   var _status = AuthStatus.NONE;
   bool _create = true;
-
-  @override
-  void initState() {
-    super.initState();
-    final kVis = KeyboardVisibilityController();
-    _sub = kVis.onChange.listen((on) => setState(() => _hasFocus = on));
-  }
 
   @override
   void didChangeDependencies() {
@@ -162,27 +151,34 @@ class _AuthInitPageState extends State<AuthInitPage> {
   }
 
   Widget _buildSocial() {
-    return Container(
-      width: double.infinity,
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        runSpacing: 7.5,
-        children: [
-          _socialButton(
-            SignInMethod.GOOGLE,
-            greySwatch[50],
-            greySwatch[500],
-            greySwatch[800].withOpacity(0.4),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            runSpacing: 7.5,
+            children: [
+              _socialButton(
+                SignInMethod.GOOGLE,
+                greySwatch[50],
+                greySwatch[500],
+                greySwatch[800].withOpacity(0.4),
+              ),
+              SizedBox(width: 15),
+              _socialButton(
+                SignInMethod.FACEBOOK,
+                Color(0xff3b5998),
+                greySwatch[50],
+                greySwatch[800].withOpacity(0.6),
+              ),
+            ],
           ),
-          SizedBox(width: 15),
-          _socialButton(
-            SignInMethod.FACEBOOK,
-            Color(0xff3b5998),
-            greySwatch[50],
-            greySwatch[800].withOpacity(0.6),
-          ),
-        ],
-      ),
+        ),
+        SizedBox(height: 7.5),
+        _showSocialError(),
+      ],
     );
   }
 
@@ -272,7 +268,8 @@ class _AuthInitPageState extends State<AuthInitPage> {
     FocusScope.of(context).requestFocus(new FocusNode());
     _loading = true;
     setState(() {});
-    widget.service.authWithSocial(method, widget.onAuto).catchError(_onError);
+    final data = SignInData(_create, method);
+    widget.service.authWithSocial(data, _onSuccess).catchError(_onError);
   }
 
   _showError(Object exception, SignInMethod method) {
@@ -283,9 +280,17 @@ class _AuthInitPageState extends State<AuthInitPage> {
       case SignInMethod.GOOGLE:
         if (exception is PlatformException && exception.code == 'SIGN_IN_CANCELED') {
           Aspects.instance.log('Login -> $method -> Canceled');
+        }
+        if (exception is LoginException) {
+          Aspects.instance.log('Login -> $method -> Fail');
+          switch (exception.status) {
+            case 400:
+              if (_create) _status = AuthStatus.DUPLICATE;
+              break;
+          }
         } else {
           Aspects.instance.recordError(exception);
-          _connectionFailure = true;
+          _status = AuthStatus.ERROR;
         }
         break;
       default:
@@ -293,11 +298,31 @@ class _AuthInitPageState extends State<AuthInitPage> {
     setState(() {});
   }
 
+  _onSuccess(AuthStatus status) {
+    switch (status) {
+      case AuthStatus.UNVERIFIED:
+        widget.onManual();
+        break;
+      case AuthStatus.NEW_ACCOUNT:
+        widget.onAuto(true);
+        break;
+      case AuthStatus.EXISTING_ACCOUNT:
+        widget.onAuto(false);
+        break;
+      default:
+    }
+  }
+
   Widget _showSocialError() {
     final social = [SignInMethod.FACEBOOK, SignInMethod.GOOGLE].contains(_method);
     if (social) {
-      if (_invalidInput) return _makeError('Something went wrong! Try again.');
-      if (_connectionFailure) return _makeError('Check your network and try again!');
+      switch (_status) {
+        case AuthStatus.DUPLICATE:
+          return _makeError('An account already exists. Try signing in!');
+        case AuthStatus.ERROR:
+          return _makeError('Something went wrong! Try again.');
+        default:
+      }
     }
     return Container();
   }
@@ -305,9 +330,18 @@ class _AuthInitPageState extends State<AuthInitPage> {
   _makeError(String text) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
-      child: Text(
-        text,
-        style: _theme.textTheme.caption?.copyWith(color: _theme.errorColor),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.error, color: _theme.errorColor, size: 18),
+          SizedBox(width: 5),
+          Text(
+            text,
+            style: _theme.textTheme.caption?.copyWith(
+              color: _theme.errorColor,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -321,11 +355,5 @@ class _AuthInitPageState extends State<AuthInitPage> {
       return 'This email already has an account!';
     }
     return null;
-  }
-
-  @override
-  void dispose() {
-    _sub.cancel();
-    super.dispose();
   }
 }

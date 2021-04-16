@@ -34,23 +34,23 @@ class SignUpService {
   Future authWithEmail(
     String email,
     String password, {
-    Function? onAuto,
+    Function(AuthStatus)? onAuto,
     required Function onManual,
     required Function(FirebaseAuthException) onError,
   }) async {
     Aspects.instance.log('AccountBloc -> authWithEmail');
   }
 
-  Future authWithSocial(SignInMethod method, Function? onAuto) async {
+  Future authWithSocial(SignInData info, Function(AuthStatus)? onAuto) async {
     Aspects.instance.log('AccountBloc -> authWithSocial');
 
     final auth = {
       SignInMethod.GOOGLE: authWithGoogle,
       SignInMethod.FACEBOOK: authWithFacebook,
-    }[method];
+    }[info.method];
 
     if (auth == null) throw PlatformException(code: 'UNKNOWN_METHOD');
-    signIn(method, await auth()).then((_) => onAuto?.call());
+    return signIn(info, await auth()).then((status) => onAuto?.call(status));
   }
 
   Future<SocialData> authWithGoogle() async {
@@ -84,26 +84,36 @@ class SignUpService {
     return SocialData(accessToken.userId, cred);
   }
 
-  Future signIn(SignInMethod method, SocialData data) async {
+  Future<AuthStatus> signIn(SignInData info, SocialData data) async {
     final user = await _createUser(data.cred);
     if (user == null) throw Exception('Could not create!');
 
-    final creds = Credentials(method, data.id, user.uid);
-    final receipt = await SignInApi(bloc.config).signIn(creds);
+    final creds = Credentials(info.method, data.id, user.uid);
+    final api = SignInApi(bloc.config);
+    final receipt = await (info.create ? api.signUp(creds) : api.signIn(creds));
     _account = Account(
       id: receipt.id,
       method: creds.method,
       email: data.email,
     )..token = receipt.token;
 
-    final api = AccountApi(bloc.config, receipt.token);
+    final aApi = AccountApi(bloc.config, receipt.token);
     if (!receipt.fresh) {
-      final oldAccount = await api.fetchAccount(receipt.id);
+      final oldAccount = await aApi.fetchAccount(receipt.id);
       if (oldAccount == null) throw Exception('Couldn\t fetch account!');
       _account.update(oldAccount);
     }
 
-    return bloc.save(_account);
+    await bloc.save(_account);
+    if(receipt.fresh) {
+      if(info.method == SignInMethod.EMAIL) {
+        return user.emailVerified ? AuthStatus.NEW_ACCOUNT : AuthStatus.UNVERIFIED;
+      } else {
+        return AuthStatus.NEW_ACCOUNT;
+      }
+    } else {
+      return AuthStatus.EXISTING_ACCOUNT;
+    }
   }
 
   Future<User?> _createUser(AuthCredential cred) async {
