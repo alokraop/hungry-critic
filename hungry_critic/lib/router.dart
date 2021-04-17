@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hungry_critic/blocs/account.dart';
+import 'package:hungry_critic/models/restaurant.dart';
+import 'package:hungry_critic/shared/route_transitions.dart';
 
 import 'routes/home.dart';
+import 'routes/restaurants/restaurant_details.dart';
 import 'shared/config.dart';
 
 class MainRouter extends StatefulWidget {
@@ -41,6 +44,10 @@ class _MainRouterState extends State<MainRouter> {
       '/': () => MaterialPageRoute(
             settings: s,
             builder: (c) => HomeScreen(bloc: widget.bloc, onLogout: widget.onLogout),
+          ),
+      '/restaurant': () => fadeIn(
+            s,
+            (c) => RestaurantDetails(restaurant: s.arguments as Restaurant),
           ),
     };
     return routes[s.name]?.call();

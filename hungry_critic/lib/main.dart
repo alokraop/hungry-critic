@@ -17,6 +17,24 @@ final theme = ThemeData(
   primaryColor: swatch,
   primarySwatch: swatch.material,
   textTheme: TextTheme(
+    headline4: TextStyle(
+      debugLabel: 'stock subTitle',
+      fontSize: 26,
+      fontWeight: FontWeight.w500,
+      decoration: TextDecoration.none,
+    ),
+    headline5: TextStyle(
+      debugLabel: 'stock subTitle',
+      fontSize: 24,
+      fontWeight: FontWeight.w500,
+      decoration: TextDecoration.none,
+    ),
+    headline6: TextStyle(
+      debugLabel: 'stock headline6',
+      fontSize: 18,
+      fontWeight: FontWeight.w500,
+      decoration: TextDecoration.none,
+    ),
     subtitle1: TextStyle(
       debugLabel: 'stock subTitle',
       fontSize: 16,
@@ -58,6 +76,8 @@ class _HungryCriticState extends State<HungryCritic> {
 
   late AccountBloc _self;
 
+  late RestaurantBloc _rBloc;
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +90,7 @@ class _HungryCriticState extends State<HungryCritic> {
   void _onProfile(bool exists) {
     _initialized = true;
     _loggedIn = exists;
+    if (exists) _initBlocs();
     setState(() {});
   }
 
@@ -94,6 +115,7 @@ class _HungryCriticState extends State<HungryCritic> {
 
   _onLogin() async {
     await Aspects.instance.recordLogin(_self.account.method.toString());
+    _initBlocs();
     setState(() => _loggedIn = true);
   }
 
@@ -104,7 +126,7 @@ class _HungryCriticState extends State<HungryCritic> {
   _buildApp() {
     return BlocsContainer(
       aBloc: _self,
-      rBloc: RestaurantBloc(_self),
+      rBloc: _rBloc,
       child: MainRouter(
         theme: theme,
         bloc: _self,
@@ -112,5 +134,10 @@ class _HungryCriticState extends State<HungryCritic> {
         onLogout: _onLogout,
       ),
     );
+  }
+
+  _initBlocs() {
+    _rBloc = RestaurantBloc(_self);
+    _rBloc.init();
   }
 }

@@ -20,8 +20,8 @@ accountRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 accountRouter.post('/', Validate(Account), async (req: Request, res: Response) => {
-  await service().createProfile(req.body, res.locals.info);
-  res.json();
+  const receipt = await service().createProfile(req.body, res.locals.info);
+  res.json(receipt);
 });
 
 accountRouter.put('/:id', Validate(Profile), async (req: Request, res: Response) => {

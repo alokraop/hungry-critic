@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import { RestaurantDao } from '../data/restaurants';
 import { UserRole } from '../models/account';
-import { Restaurant, RestaurantDetails } from '../models/restaurant';
+import { FilterCriteria, Restaurant, RestaurantDetails } from '../models/restaurant';
 
 import { v4 as uuid } from 'uuid';
 import { APIError } from '../controllers/middleware/error';
@@ -19,15 +19,15 @@ export class RestaurantService {
     return restaurant;
   }
 
-  async findAll(caller: TokenInfo): Promise<RestaurantDetails[]> {
+  async findAll(criteria: FilterCriteria, caller: TokenInfo): Promise<RestaurantDetails[]> {
     switch (caller.role) {
       case UserRole.CUSTOMER:
-        const cursor = await this.dao.findSorted({}, { _id: 0, averageRating: 1 });
+        const cursor = await this.dao.findSorted(criteria, { averageRating: 1 }, { _id: 0 });
         return cursor.toArray();
       case UserRole.OWNER:
-        return this.dao.findAll({ owner: caller.id });
+        return this.dao.findAll({ owner: caller.id, ...criteria });
       case UserRole.ADMIN:
-        return this.dao.findAll({});
+        return this.dao.findAll(criteria);
     }
   }
 

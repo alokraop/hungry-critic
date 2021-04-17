@@ -3,7 +3,91 @@ import 'package:flutter/services.dart';
 
 import 'colors.dart';
 
-class OutlinedTextField extends StatefulWidget {
+InputBorder noBorder(Color color) => InputBorder.none;
+
+InputBorder _outlineBorder(Color color) {
+  return OutlineInputBorder(
+    borderSide: BorderSide(color: color, width: 1),
+    borderRadius: BorderRadius.circular(22.5),
+  );
+}
+
+InputBorder _underlineBorder(Color color) {
+  return UnderlineInputBorder(
+    borderSide: BorderSide(color: color, width: 1),
+    borderRadius: BorderRadius.circular(22.5),
+  );
+}
+
+class OutlinedTextField extends CustomTextField {
+  OutlinedTextField({
+    Key? key,
+    bool isDense = true,
+    FormFieldValidator<String>? validator,
+    GlobalKey<FormState>? state,
+    TextEditingController? controller,
+    String? hintText,
+    bool obscure = false,
+    TextCapitalization caps = TextCapitalization.sentences,
+    TextInputType keyboardType = TextInputType.text,
+    Icon? prefixIcon,
+    TextAlign textAlign = TextAlign.start,
+    int? maxLength,
+    TextStyle? style,
+  }) : super(
+          key: key,
+          isDense: isDense,
+          validator: validator,
+          state: state,
+          controller: controller,
+          hintText: hintText,
+          obscure: obscure,
+          caps: caps,
+          keyboardType: keyboardType,
+          prefixIcon: prefixIcon,
+          textAlign: textAlign,
+          maxLength: maxLength,
+          makeBorder: _outlineBorder,
+          style: style,
+        );
+}
+
+class UnderlinedTextField extends CustomTextField {
+  UnderlinedTextField({
+    Key? key,
+    bool isDense = true,
+    FormFieldValidator<String>? validator,
+    GlobalKey<FormState>? state,
+    TextEditingController? controller,
+    String? hintText,
+    bool obscure = false,
+    TextCapitalization caps = TextCapitalization.sentences,
+    TextInputType keyboardType = TextInputType.text,
+    Icon? prefixIcon,
+    TextAlign textAlign = TextAlign.start,
+    int? maxLength,
+    EdgeInsetsGeometry? padding,
+    TextStyle? style,
+  }) : super(
+          key: key,
+          isDense: isDense,
+          validator: validator,
+          state: state,
+          controller: controller,
+          hintText: hintText,
+          obscure: obscure,
+          caps: caps,
+          keyboardType: keyboardType,
+          prefixIcon: prefixIcon,
+          textAlign: textAlign,
+          maxLength: maxLength,
+          makeBorder: _underlineBorder,
+          style: style,
+          padding: padding,
+        );
+}
+
+class CustomTextField extends StatefulWidget {
   final FormFieldValidator<String>? validator;
   final GlobalKey<FormState>? state;
   final TextEditingController? controller;
@@ -15,8 +99,11 @@ class OutlinedTextField extends StatefulWidget {
   final bool isDense;
   final TextCapitalization caps;
   final bool obscure;
+  final InputBorder Function(Color) makeBorder;
+  final TextStyle? style;
+  final EdgeInsetsGeometry? padding;
 
-  OutlinedTextField({
+  CustomTextField({
     Key? key,
     this.isDense = true,
     this.validator,
@@ -29,34 +116,38 @@ class OutlinedTextField extends StatefulWidget {
     this.prefixIcon,
     this.textAlign = TextAlign.start,
     this.maxLength,
+    this.makeBorder = noBorder,
+    this.style,
+    this.padding = const EdgeInsets.all(10),
   }) : super(key: key);
   @override
-  _OutlinedTextFieldState createState() => _OutlinedTextFieldState();
+  _CustomTextFieldState createState() => _CustomTextFieldState();
 }
 
-class _OutlinedTextFieldState extends State<OutlinedTextField> {
+class _CustomTextFieldState extends State<CustomTextField> {
   bool unsubmitted = false;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final _style = widget.style ?? theme.textTheme.headline6;
     return SizedBox(
       child: TextFormField(
         controller: widget.controller,
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.all(12.5),
+          contentPadding: widget.padding,
           prefixIcon: widget.prefixIcon,
           hintText: widget.hintText,
-          hintStyle: theme.textTheme.bodyText1?.copyWith(
+          hintStyle: _style?.copyWith(
             color: greySwatch[800].withOpacity(0.6),
           ),
-          enabledBorder: _makeBorder(greySwatch[300]),
-          focusedBorder: _makeBorder(theme.primaryColor),
-          errorBorder: _makeBorder(theme.errorColor),
-          focusedErrorBorder: _makeBorder(theme.errorColor),
+          enabledBorder: widget.makeBorder(greySwatch[300]),
+          focusedBorder: widget.makeBorder(theme.primaryColor),
+          errorBorder: widget.makeBorder(theme.errorColor),
+          focusedErrorBorder: widget.makeBorder(theme.errorColor),
           errorStyle: TextStyle(color: theme.errorColor),
           isDense: widget.isDense,
         ),
-        style: theme.textTheme.bodyText1,
+        style: _style,
         obscureText: widget.obscure,
         cursorColor: greySwatch[800],
         keyboardType: widget.keyboardType,
@@ -75,13 +166,6 @@ class _OutlinedTextFieldState extends State<OutlinedTextField> {
           LengthLimitingTextInputFormatter(widget.maxLength),
         ],
       ),
-    );
-  }
-
-  _makeBorder(Color color) {
-    return OutlineInputBorder(
-      borderSide: BorderSide(color: color, width: 1),
-      borderRadius: BorderRadius.circular(22.5),
     );
   }
 }

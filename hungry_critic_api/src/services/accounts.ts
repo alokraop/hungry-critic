@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import { APIError } from '../controllers/middleware/error';
 import { AccountDao } from '../data/accounts';
-import { Account, Profile, Settings, UserRole } from '../models/account';
+import { Account, AuthReceipt, Profile, Settings, UserRole } from '../models/account';
 import { TokenInfo } from '../models/internal';
 import { TokenService } from './token';
 
@@ -28,17 +28,18 @@ export class AccountService {
     return this.dao.save(account);
   }
 
-  async createProfile(account: Account, caller: TokenInfo): Promise<any> {
+  async createProfile(account: Account, caller: TokenInfo): Promise<AuthReceipt> {
     if (caller.id !== account.id) {
       throw new APIError("You don't have priviledges to modify this account!", 403);
     }
     const existing = await this.dao.fetch(account.id);
     if (!existing) throw new APIError("Can't create a profile before creating the account!");
     if (existing.settings.initialized) throw new APIError('Profile exists!!');
-    return this.dao.update(
+    await this.dao.update(
       { id: account.id },
       { ...account, settings: { ...existing.settings, initialized: true } },
     );
+    return { id: account.id, token: this.token.create(account), fresh: false };
   }
 
   async update(id: string, profile: Profile, caller: TokenInfo): Promise<string> {

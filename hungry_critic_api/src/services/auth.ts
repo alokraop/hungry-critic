@@ -95,7 +95,6 @@ export class AuthService {
   }
 
   private makeReceipt(account: Account, fresh: boolean): AuthReceipt {
-    const info = <TokenInfo>{ id: account.id, role: account.role };
-    return { id: account.id, fresh, token: this.token.create(info) };
+    return { id: account.id, fresh, token: this.token.create(account) };
   }
 }

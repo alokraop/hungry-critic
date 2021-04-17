@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> _populatePages(UserRole role) {
     final showUsers = role == UserRole.ADMIN;
     return [
-      RestaurantsList(onUpdate: _createRestaurant),
+      RestaurantList(onUpdate: _createRestaurant),
       if (showUsers) UsersList(onUpdate: _openUser),
       ProfilePage(onLogout: widget.onLogout),
     ];
@@ -112,7 +112,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   _findButton(UserRole role) {
     if (role == UserRole.CUSTOMER) return null;
-    return _buildButton('NEW RESTAURANT', Icons.add, () => _createRestaurant());
+    if(_selectedIndex != 0) return null;
+    return _buildButton('RESTAURANT', Icons.add, () => _createRestaurant());
   }
 
   _buildButton(String label, IconData icon, Function()? onTap) {
@@ -123,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onPressed: onTap,
       label: Text(
         label,
-        style: _theme.textTheme.caption?.copyWith(
+        style: _theme.textTheme.bodyText2?.copyWith(
           color: greySwatch[50],
         ),
       ),

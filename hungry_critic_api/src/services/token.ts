@@ -2,13 +2,15 @@ import jwt from 'jsonwebtoken';
 import { Service } from 'typedi';
 import config from 'config';
 import { LoggingService } from './logging';
+import { Account } from '../models/account';
 import { TokenInfo } from '../models/internal';
 
 @Service()
 export class TokenService {
   constructor(private logger: LoggingService) {}
 
-  create(info: TokenInfo): string {
+  create(account: Account): string {
+    const info = <TokenInfo>{ id: account.id, role: account.role };
     return jwt.sign(JSON.stringify(info), config.get<string>('auth.key'));
   }
 

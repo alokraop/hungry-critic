@@ -81,16 +81,20 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildTitle(),
-              SizedBox(height: 20),
+              SizedBox(height: 25),
+              Text(
+                _create ? 'CREATE AN ACCOUNT WITH:' : 'SIGN INTO YOUR ACCOUNT WITH:',
+                style: _theme.textTheme.bodyText2?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 15),
               _buildMethods(),
               _buildPasswords(),
             ],
           ),
         ),
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: 15),
-          child: _buildSwap(),
-        ),
+        _buildSwap(),
       ],
     );
   }
@@ -107,8 +111,8 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
             LabelDivider(
               color: greySwatch[500],
               content: Text(
-                _create ? 'or sign-up with' : 'or sign-in with',
-                style: _theme.textTheme.bodyText2?.copyWith(
+                'OR',
+                style: _theme.textTheme.caption?.copyWith(
                   color: _theme.primaryColor,
                   fontWeight: FontWeight.w300,
                 ),
@@ -141,6 +145,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
                 maxLength: 20,
                 validator: _validatePassword,
                 obscure: true,
+                style: _theme.textTheme.bodyText1,
               ),
               SizedBox(height: 10),
               if (_create)
@@ -154,6 +159,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
                   maxLength: 20,
                   validator: _validateConfirm,
                   obscure: true,
+                  style: _theme.textTheme.bodyText1,
                 ),
               if (_create) SizedBox(height: 15),
               SizedBox(
@@ -236,6 +242,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
             caps: TextCapitalization.none,
             maxLength: 50,
             validator: _validateEmail,
+            style: _theme.textTheme.bodyText1,
           ),
         ),
         SizedBox(width: 10),
@@ -275,25 +282,28 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
   }
 
   _buildSwap() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 1),
-          child: Text(
-            _create ? 'Already have an account?' : 'Don\'t have an account?',
-            style: _theme.textTheme.caption,
+    return SafeArea(
+      bottom: true,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 1),
+            child: Text(
+              _create ? 'Already have an account?' : 'Don\'t have an account?',
+              style: _theme.textTheme.caption,
+            ),
           ),
-        ),
-        SizedBox(width: 5),
-        TextButton(
-          child: Text(
-            _create ? 'SIGN IN' : 'CREATE ACCOUNT',
-            style: _theme.textTheme.bodyText2?.copyWith(color: _theme.primaryColor),
-          ),
-          onPressed: _toggleCreate,
-        )
-      ],
+          SizedBox(width: 5),
+          TextButton(
+            child: Text(
+              _create ? 'SIGN IN' : 'CREATE ACCOUNT',
+              style: _theme.textTheme.bodyText2?.copyWith(color: _theme.primaryColor),
+            ),
+            onPressed: _toggleCreate,
+          )
+        ],
+      ),
     );
   }
 
@@ -330,7 +340,10 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
     );
   }
 
-  _toggleCreate() => setState(() => _create = !_create);
+  _toggleCreate() {
+    _status = AuthStatus.NONE;
+    setState(() => _create = !_create);
+  }
 
   _authWithEmail() {
     _onError(e) => _handleError(e, SignInMethod.EMAIL);

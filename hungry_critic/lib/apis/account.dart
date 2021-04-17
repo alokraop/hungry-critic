@@ -23,9 +23,10 @@ class AccountApi {
     return Account.fromJson(jsonDecode(response));
   }
 
-  Future<void> initProfile(Account account) async {
+  Future<AuthReceipt> initProfile(Account account) async {
     final body = jsonEncode(account);
-    await http.post(url(), headers: headers, body: body);
+    final response = await http.post(url(), headers: headers, body: body);
+    return AuthReceipt.fromJson(jsonDecode(response));
   }
 
   Future<void> updateAccount(Account account) async {

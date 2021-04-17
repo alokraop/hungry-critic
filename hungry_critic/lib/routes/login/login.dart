@@ -43,6 +43,7 @@ class _LoginScreensState extends State<LoginScreens> {
     return AnnotatedRegion(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
         body: Container(
@@ -113,11 +114,5 @@ class _LoginScreensState extends State<LoginScreens> {
     _controller.jumpToPage(0);
     _needsVerify = true;
     setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _node.dispose();
-    super.dispose();
   }
 }

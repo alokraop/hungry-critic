@@ -38,14 +38,14 @@ class AccountBloc {
     return _account?.name != null;
   }
 
-  Future initProfile(Account changes) {
+  Future initProfile(Account changes) async {
     account.update(changes);
-    _publish(account);
 
-    return Future.wait([
-      _provider.save(account),
-      _api.initProfile(account),
-    ]);
+    final receipt = await _api.initProfile(account);
+    account.token = receipt.token;
+    
+    _publish(account);
+    return _provider.save(account);
   }
 
   Future update(Account changes) {

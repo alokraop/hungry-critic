@@ -141,7 +141,11 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
 
   Widget _buildFlap() {
     final content = {
-      Entity.RESTAURANT: () => RestaurantForm(key: _formKey, restaurant: widget.entity),
+      Entity.RESTAURANT: () => RestaurantForm(
+            key: _formKey,
+            restaurant: widget.entity,
+            updateFlap: _updateFlap,
+          ),
     }[widget.type]
         ?.call();
     final flap = Container(
