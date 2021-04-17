@@ -1,8 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hungry_critic/models/restaurant.dart';
-import 'package:hungry_critic/routes/restaurants/common.dart';
-import 'package:hungry_critic/shared/colors.dart';
+
+import '../../blocs/account.dart';
+import '../../blocs/restaurant.dart';
+import '../../flaps/creation_flap.dart';
+import '../../models/account.dart';
+import '../../models/restaurant.dart';
+import '../../shared/colors.dart';
+import '../../shared/context.dart';
+import '../../shared/loader.dart';
+import '../../shared/popup.dart';
+import 'common.dart';
 
 const background = Color(0xffe8e8e8);
 
@@ -17,13 +27,42 @@ class RestaurantDetails extends StatefulWidget {
 
 class _RestaurantDetailsState extends State<RestaurantDetails> {
   late ThemeData _theme;
+  late RestaurantBloc _bloc;
+  late AccountBloc _aBloc;
+
+  late Restaurant _restaurant;
+
+  StreamSubscription<List<String>>? _sub;
 
   bool _highlights = true;
+
+  bool get canModify {
+    final account = _aBloc.account;
+    switch (account.role) {
+      case UserRole.ADMIN:
+        return true;
+      case UserRole.CUSTOMER:
+        return false;
+      case UserRole.OWNER:
+        return account.id == widget.restaurant.owner;
+    }
+  }
+
+  bool get canReview => _aBloc.account.role == UserRole.CUSTOMER;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_sub == null) {
+      _restaurant = widget.restaurant;
+      _sub = _bloc.restaurants.listen((_) {
+        final restaurant = _bloc.find(_restaurant.id);
+        if (restaurant != null) _restaurant = restaurant;
+      });
+    }
     _theme = Theme.of(context);
+    _bloc = BlocsContainer.of(context).rBloc;
+    _aBloc = BlocsContainer.of(context).aBloc;
   }
 
   @override
@@ -68,6 +107,19 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
             _buildForehead(),
           ],
         ),
+        floatingActionButton: canReview
+            ? FloatingActionButton.extended(
+                onPressed: _startReview,
+                icon: Icon(Icons.edit),
+                label: Text(
+                  'REVIEW',
+                  style: _theme.textTheme.bodyText1?.copyWith(
+                    color: greySwatch[50],
+                  ),
+                ),
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
   }
@@ -111,20 +163,22 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
                     ),
                     onPressed: () {},
                   ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.edit,
-                      color: greySwatch[50],
+                  if (canModify)
+                    IconButton(
+                      icon: Icon(
+                        Icons.edit,
+                        color: greySwatch[50],
+                      ),
+                      onPressed: _startEdit,
                     ),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.delete,
-                      color: greySwatch[50],
+                  if (canModify)
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete,
+                        color: greySwatch[50],
+                      ),
+                      onPressed: _startDelete,
                     ),
-                    onPressed: () {},
-                  ),
                 ],
               ),
             ),
@@ -145,18 +199,17 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
   }
 
   _buildTitle() {
-    final restaurant = widget.restaurant;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          restaurant.name,
+          _restaurant.name,
           style: _theme.textTheme.headline4
               ?.copyWith(fontWeight: FontWeight.w500, color: greySwatch[900]),
         ),
         Text(
-          restaurant.cuisines.join(', '),
+          _restaurant.cuisines.join(', '),
           style: _theme.textTheme.bodyText2,
         ),
       ],
@@ -164,10 +217,9 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
   }
 
   _buildRating() {
-    final restaurant = widget.restaurant;
     return Container(
       decoration: BoxDecoration(
-        color: findColor(restaurant.averageRating),
+        color: findColor(_restaurant.averageRating),
         borderRadius: BorderRadius.horizontal(left: Radius.circular(12.5)),
       ),
       padding: EdgeInsets.symmetric(horizontal: 12.5, vertical: 7.5),
@@ -175,7 +227,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            restaurant.averageRating.toStringAsFixed(1),
+            _restaurant.averageRating.toStringAsFixed(1),
             style: _theme.textTheme.headline6?.copyWith(color: greySwatch[50]),
           ),
           SizedBox(width: 5),
@@ -186,7 +238,6 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
   }
 
   _buildLocation() {
-    final restaurant = widget.restaurant;
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: Column(
@@ -229,7 +280,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
           Padding(
             padding: const EdgeInsets.only(left: 5, top: 5),
             child: Text(
-              restaurant.address ?? 'Unknown!',
+              _restaurant.address ?? 'Unknown!',
               style: _theme.textTheme.bodyText1?.copyWith(
                 fontWeight: FontWeight.w300,
               ),
@@ -345,5 +396,60 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
         ),
       ],
     );
+  }
+
+  _startEdit() {
+    Navigator.of(context).push(
+      CreateEntity(entity: _restaurant, restaurant: true),
+    );
+  }
+
+  _startDelete() {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('Are you sure?'),
+        content: Text(
+          'This will delete the restaurant and all its reviews',
+          style: _theme.textTheme.bodyText1?.copyWith(fontWeight: FontWeight.w300),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => _delete(),
+            child: Text('DELETE'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(),
+            child: Text('CANCEL'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  _delete() async {
+    Navigator.of(context).pop();
+    Navigator.of(context).push(LoaderRoute('Deleting Restaurant...'));
+    await _bloc.deleteRestaurant(widget.restaurant).catchError(
+          (_) => Navigator.of(context).pushReplacement(
+            IconRoute(
+              Icon(Icons.error_outline, color: _theme.errorColor),
+              'Failed! Please try again!',
+            ),
+          ),
+        );
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  _startReview() {
+    Navigator.of(context).push(
+      CreateEntity(entity: _restaurant, restaurant: true),
+    );
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 }

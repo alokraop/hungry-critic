@@ -12,14 +12,13 @@ class HttpException implements Exception {
   String toString() => 'HttpException: $message';
 }
 
-Future<String?> get(Uri url, {Map<String, String>? headers}) async {
+Future<String> get(Uri url, {Map<String, String>? headers}) async {
   final response = await http.get(url, headers: headers).catchError(recordError);
   final firstDigit = response.statusCode ~/ 100;
   if (firstDigit != 2) {
-    Aspects.instance.recordError(
-      HttpException('GET $url -> ${response.body}'),
-    );
-    return null;
+    final exception = HttpException('GET $url -> ${response.body}');
+    Aspects.instance.recordError(exception);
+    throw exception;
   }
   return response.body;
 }
@@ -51,17 +50,10 @@ Future<http.Response> rawPost(
   body,
   Encoding? encoding,
 }) {
-  return http
-      .post(
-        url,
-        headers: headers,
-        body: body,
-        encoding: encoding,
-      )
-      .catchError(recordError);
+  return http.post(url, headers: headers, body: body, encoding: encoding).catchError(recordError);
 }
 
-Future<String?> put(
+Future<String> put(
   Uri url, {
   Map<String, String>? headers,
   body,
@@ -77,22 +69,20 @@ Future<String?> put(
       .catchError(recordError);
   final firstDigit = response.statusCode ~/ 100;
   if (firstDigit != 2) {
-    Aspects.instance.recordError(
-      HttpException('PUT $url -> ${response.body}'),
-    );
-    return null;
+    final exception = HttpException('PUT $url -> ${response.body}');
+    Aspects.instance.recordError(exception);
+    throw exception;
   }
   return response.body;
 }
 
-Future<String?> delete(Uri url, {Map<String, String>? headers}) async {
+Future<String> delete(Uri url, {Map<String, String>? headers}) async {
   final response = await http.delete(url, headers: headers).catchError(recordError);
   final firstDigit = response.statusCode ~/ 100;
   if (firstDigit != 2) {
-    Aspects.instance.recordError(
-      HttpException('DELETE $url -> ${response.body}'),
-    );
-    return null;
+    final exception = HttpException('DELETE $url -> ${response.body}');
+    Aspects.instance.recordError(exception);
+    throw exception;
   }
   return response.body;
 }

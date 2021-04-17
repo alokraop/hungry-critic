@@ -1,3 +1,4 @@
+import 'package:hungry_critic/models/review.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../apis/restaurant.dart';
@@ -20,7 +21,7 @@ class RestaurantBloc {
   Stream<List<String>> get restaurants => _rSubject.stream;
 
   Future init() async {
-    final rs = await api.findAll() ?? [];
+    final rs = await api.findAll();
     rs.forEach((r) => _rMap[r.id] = r);
     _restaurants = rs.map((r) => r.id).toList();
     _publish();
@@ -28,11 +29,17 @@ class RestaurantBloc {
 
   Restaurant? find(String id) => _rMap[id];
 
-  Future createNew(Restaurant restaurant) async {
+  Future createNew(Restaurant r) async {
+    final restaurant = await api.createNew(r);
     _restaurants.insert(0, restaurant.id);
     _rMap[restaurant.id] = restaurant;
     _publish();
-    return api.createNew(restaurant);
+  }
+
+  Future update(Restaurant restaurant) async {
+    _rMap[restaurant.id] = restaurant;
+    _publish();
+    return api.update(restaurant);
   }
 
   _publish() {
@@ -48,5 +55,17 @@ class RestaurantBloc {
     _rMap.remove(restaurant.id);
     _publish();
     return api.delete(restaurant.id);
+  }
+
+  void addReview(Review review) {
+    //TODO:
+  }
+
+  void updateReview(Review review, Review? best, Review? worst) {
+    //TODO:
+  }
+
+  void deleteReview(Review review, Review? best, Review? worst) {
+    //TODO:
   }
 }

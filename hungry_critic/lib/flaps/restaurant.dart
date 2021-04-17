@@ -214,12 +214,16 @@ class _RestaurantFormState extends EntityCreator<RestaurantForm> {
   @override
   Future<bool> createEntity() {
     final restaurant = Restaurant(
-      id: Uuid().v4(),
+      id: id,
       owner: _aBloc.account.id,
       name: _nameC.text,
       address: _addC.text,
       cuisines: _cuisines,
     );
-    return _bloc.createNew(restaurant).then((_) => true).catchError((_) => false);
+    if (widget.restaurant == null) {
+      return _bloc.createNew(restaurant).then((_) => true).catchError((_) => false);
+    } else {
+      return _bloc.update(restaurant).then((_) => true).catchError((_) => false);
+    }
   }
 }

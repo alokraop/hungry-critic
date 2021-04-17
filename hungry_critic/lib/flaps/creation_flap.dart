@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hungry_critic/shared/popup.dart';
 
 import '../shared/colors.dart';
 import 'restaurant.dart';
@@ -249,6 +250,15 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
       Navigator.of(context).pop();
     } else {
       setState(() => _loading = false);
+      Navigator.of(context).pushReplacement(
+        IconRoute(
+          Icon(
+            Icons.error_outline,
+            color: _theme.errorColor,
+          ),
+          'Failed! Please try again later.',
+        ),
+      );
     }
   }
 }
