@@ -6,7 +6,7 @@ import { FilterCriteria, Restaurant, RestaurantDetails } from '../models/restaur
 import { v4 as uuid } from 'uuid';
 import { APIError } from '../controllers/middleware/error';
 import { TokenInfo } from '../models/internal';
-import { Review } from '../models/review';
+import { Review, ReviewResponse } from '../models/review';
 import { ReviewService } from './reviews';
 
 @Service()
@@ -98,7 +98,7 @@ export class RestaurantService {
   }
 
   async deleteReview(id: string, rId: string, caller: TokenInfo) {
-    if (id !== caller.id && caller.role !== UserRole.ADMIN) {
+    if (caller.role !== UserRole.ADMIN) {
       throw new APIError("You don't have priviledges to delete this review!");
     }
     const [oldReview, restaurant] = await Promise.all([
@@ -112,6 +112,34 @@ export class RestaurantService {
     await this.assignHighlights(restaurant);
 
     return this.dao.update({ id: rId }, restaurant);
+  }
+
+  async addReply(id: string, author: string, reply: ReviewResponse, info: TokenInfo): Promise<any> {
+    if (info.role === UserRole.CUSTOMER) {
+      throw new APIError("You can't modify this review!");
+    }
+
+    const restaurant = await this.dao.find({ id });
+    if (!restaurant) throw new APIError('This restaurant does not exist!');
+
+    if (restaurant.owner !== info.id && info.role !== UserRole.ADMIN) {
+      throw new APIError("You can't modify this review!");
+    }
+
+    const review = await this.rService.updateReply(restaurant.id, author, reply);
+    const changes = this.updateReviews(restaurant, review);
+    if (changes) await this.dao.update({ id: restaurant.id }, restaurant);
+  }
+
+  async removeReply(id: string, author: string, info: TokenInfo): Promise<any> {
+    if (info.role !== UserRole.ADMIN) throw new APIError("You can't delete the reply");
+
+    const restaurant = await this.dao.find({ id });
+    if (!restaurant) throw new APIError('This restaurant does not exist!');
+
+    const review = await this.rService.deleteReply(restaurant.id, author);
+    const changes = this.updateReviews(restaurant, review);
+    if (changes) await this.dao.update({ id: restaurant.id }, restaurant);
   }
 
   private addRating(restaurant: RestaurantDetails, review: Review) {
@@ -145,5 +173,17 @@ export class RestaurantService {
     ]);
     restaurant.bestReview = best ?? undefined;
     restaurant.worstReview = worst ?? undefined;
+  }
+
+  private updateReviews(restaurant: RestaurantDetails, review: Review) {
+    if(restaurant.bestReview?.author === review.author) {
+      restaurant.bestReview = review;
+      return true;
+    }
+    if(restaurant.worstReview?.author === review.author) {
+      restaurant.worstReview = review;
+      return true;
+    }
+    return false;
   }
 }

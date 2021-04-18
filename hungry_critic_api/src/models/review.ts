@@ -5,6 +5,9 @@ export class Review {
   author: string;
 
   @Allow()
+  authorName: string;
+
+  @Allow()
   restaurant: string;
 
   @IsDefined()
@@ -14,7 +17,14 @@ export class Review {
   @Allow()
   review: string;
 
+  reply?: string;
+
   @IsDefined()
   @IsPositive()
   timestamp: number;
+}
+
+export class ReviewResponse {
+  @Allow()
+  response: string;
 }

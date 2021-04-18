@@ -134,12 +134,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _createRestaurant([Restaurant? restaurant]) {
-    Navigator.of(context).push(CreateEntity(restaurant: true, entity: restaurant));
+    Navigator.of(context).push(CreateEntity(type: Entity.RESTAURANT, entity: restaurant));
   }
 
   _openUser([Account? account]) {
     Navigator.of(context).push(
-      CreateEntity(restaurant: false, entity: account),
+      CreateEntity(type: Entity.RESTAURANT, entity: account),
     );
   }
 }

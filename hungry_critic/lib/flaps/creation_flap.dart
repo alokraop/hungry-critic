@@ -1,21 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:hungry_critic/shared/popup.dart';
+import 'package:hungry_critic/flaps/reply.dart';
+import 'package:hungry_critic/flaps/review.dart';
 
 import '../shared/colors.dart';
+import '../shared/popup.dart';
 import 'restaurant.dart';
 
-enum Entity { RESTAURANT, USER }
+enum Entity { RESTAURANT, REVIEW, REPLY, USER }
+
+enum SubmitStatus { SUCCESS, INVALID, FAIL }
 
 abstract class EntityCreator<T extends StatefulWidget> extends State<T> {
-  Future<bool> createEntity();
+  FutureOr<SubmitStatus> submit();
 }
 
 class CreateEntity extends PopupRoute<String> {
-  CreateEntity({this.entity, this.restaurant = false});
+  CreateEntity({this.entity, required this.type});
 
   final entity;
 
-  final bool restaurant;
+  final Entity type;
 
   @override
   Color get barrierColor => Colors.black.withOpacity(0.3);
@@ -32,11 +38,7 @@ class CreateEntity extends PopupRoute<String> {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
-    return CreationFlap(
-      entity: entity,
-      animation: animation,
-      type: restaurant ? Entity.RESTAURANT : Entity.USER,
-    );
+    return CreationFlap(entity: entity, animation: animation, type: type);
   }
 
   @override
@@ -80,7 +82,7 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
 
   Widget? _flapContents;
 
-  final _formKey = GlobalKey<EntityCreator>();
+  final _creatorKey = GlobalKey<EntityCreator>();
 
   bool _loading = false;
 
@@ -143,10 +145,16 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
   Widget _buildFlap() {
     final content = {
       Entity.RESTAURANT: () => RestaurantForm(
-            key: _formKey,
+            key: _creatorKey,
             restaurant: widget.entity,
             updateFlap: _updateFlap,
           ),
+      Entity.REVIEW: () => ReviewForm(key: _creatorKey),
+      Entity.REPLY: () {
+        final reply = widget.entity;
+        if (reply == null) return Container();
+        return ReplyForm(key: _creatorKey, review: reply);
+      },
     }[widget.type]
         ?.call();
     final flap = Container(
@@ -176,7 +184,7 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
                         ),
                       )
                     : Text(
-                        widget.entity == null ? 'CREATE' : 'UPDATE',
+                        'SAVE',
                         style: _theme.textTheme.bodyText1?.copyWith(
                           color: greySwatch[50],
                         ),
@@ -185,6 +193,7 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
                 onPressed: _saveEntity,
               ),
             ),
+            SizedBox(height: 5),
           ],
         ),
       ),
@@ -245,20 +254,24 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
 
   _saveEntity() async {
     setState(() => _loading = true);
-    final success = await _formKey.currentState?.createEntity() ?? false;
-    if (success) {
-      Navigator.of(context).pop();
-    } else {
-      setState(() => _loading = false);
-      Navigator.of(context).pushReplacement(
-        IconRoute(
-          Icon(
-            Icons.error_outline,
-            color: _theme.errorColor,
+    final status = await _creatorKey.currentState?.submit() ?? SubmitStatus.INVALID;
+    setState(() => _loading = false);
+    switch (status) {
+      case SubmitStatus.SUCCESS:
+        Navigator.of(context).pop();
+        break;
+      case SubmitStatus.FAIL:
+        Navigator.of(context).pushReplacement(
+          IconRoute(
+            Icon(
+              Icons.error_outline,
+              color: _theme.errorColor,
+            ),
+            'Failed! Please try again later.',
           ),
-          'Failed! Please try again later.',
-        ),
-      );
+        );
+        break;
+      case SubmitStatus.INVALID:
     }
   }
 }

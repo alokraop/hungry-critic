@@ -17,15 +17,22 @@ class ReviewBloc {
 
   Restaurant? _restaurant;
 
-  List<Review> _reviews = [];
+  List<String> _reviews = [];
 
-  final _rSubject = BehaviorSubject<List<Review>>();
+  Map<String, Review> _rMap = {};
 
-  Stream<List<Review>> get reviews => _rSubject.stream;
+  final _rSubject = BehaviorSubject<List<String>>();
+
+  Stream<List<String>> get reviews => _rSubject.stream;
+
+  Review? find(String id) => _rMap[id];
 
   Future push(Restaurant restaurant) async {
     _restaurant = restaurant;
-    _reviews = await api.findAllReviews(restaurant.id);
+    final rs = await api.findAllReviews(restaurant.id);
+    rs.forEach((r) => _rMap[r.author] = r);
+    rs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _reviews = rs.map((r) => r.author).toList();
     _publish();
   }
 
@@ -39,15 +46,18 @@ class ReviewBloc {
     final restaurant = _restaurant;
     if (restaurant == null) throw Exception('Cannot create a review!');
     review.restaurant = restaurant.id;
-    _reviews.insert(0, review);
+    _reviews.insert(0, review.author);
+    _rMap[review.author] = review;
     _publish();
     rBloc.addReview(review);
     return api.createReview(review);
   }
 
   Future update(Review review) async {
+    final oldReview = _rMap[review.author];
+    _rMap[review.author] = review;
     _publish();
-    rBloc.updateReview(review, _findBest(), _findWorst());
+    rBloc.updateReview(review, oldReview, _findBest(), _findWorst());
     return api.updateReview(review);
   }
 
@@ -60,7 +70,7 @@ class ReviewBloc {
   }
 
   Future delete(Review review) async {
-    _reviews.removeWhere((r) => r.author == review.author);
+    _reviews.remove(review.author);
     _publish();
     rBloc.deleteReview(review, _findBest(), _findWorst());
     return api.deleteReview(review);
@@ -68,8 +78,10 @@ class ReviewBloc {
 
   Review? _findBest() {
     Review? best;
-    for (final review in _reviews) {
-      if (review.rating >= (best?.rating ?? 0)) {
+    for (final id in _reviews) {
+      final review = _rMap[id];
+      final cBest = best?.rating ?? 0;
+      if (review != null && review.rating >= cBest) {
         best = review;
       }
     }
@@ -78,11 +90,20 @@ class ReviewBloc {
 
   Review? _findWorst() {
     Review? worst;
-    for (final review in _reviews) {
-      if (review.rating <= (worst?.rating ?? 5)) {
+    for (final id in _reviews) {
+      final review = _rMap[id];
+      final cWorst = worst?.rating ?? 5;
+      if (review != null && review.rating <= cWorst) {
         worst = review;
       }
     }
     return worst;
+  }
+
+  Future updateReply(Review review, String reply) async {
+    review.reply = reply;
+    _publish();
+    rBloc.updateReply(review);
+    return api.addReply(review);
   }
 }

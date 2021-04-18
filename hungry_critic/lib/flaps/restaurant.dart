@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
@@ -56,6 +58,8 @@ class _RestaurantFormState extends EntityCreator<RestaurantForm> {
 
   final _cuisines = <String>[];
 
+  final _formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
@@ -81,65 +85,68 @@ class _RestaurantFormState extends EntityCreator<RestaurantForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: _screen.width * 0.15),
-      child: Column(
-        children: [
-          Text(
-            widget.restaurant != null ? 'Update Restaurant' : 'Create Restaurant',
-            style: _theme.textTheme.headline5?.copyWith(
-              color: swatch,
-              fontWeight: FontWeight.w300,
+    return Form(
+      key: _formKey,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: _screen.width * 0.15),
+        child: Column(
+          children: [
+            Text(
+              widget.restaurant != null ? 'Update Restaurant' : 'Create Restaurant',
+              style: _theme.textTheme.headline5?.copyWith(
+                color: swatch,
+                fontWeight: FontWeight.w300,
+              ),
             ),
-          ),
-          SizedBox(height: 15),
-          UnderlinedTextField(
-            hintText: 'A Name',
-            controller: _nameC,
-            style: _theme.textTheme.bodyText1,
-            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 7.5),
-          ),
-          SizedBox(height: 20),
-          UnderlinedTextField(
-            hintText: 'An Address',
-            controller: _addC,
-            style: _theme.textTheme.bodyText1,
-            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-          ),
-          SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.only(left: 15),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'CUISINES',
-                  style: _theme.textTheme.caption?.copyWith(color: swatch[400]),
-                ),
-                _cuisines.length < 3
-                    ? InkWell(
-                        child: SizedBox(
-                          height: 40,
-                          child: Icon(Icons.add, color: swatch[500]),
-                        ),
-                        onTap: _pickCuisine,
-                      )
-                    : SizedBox(height: 40),
-              ],
+            SizedBox(height: 15),
+            UnderlinedTextField(
+              hintText: 'A Name',
+              controller: _nameC,
+              style: _theme.textTheme.bodyText1,
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 7.5),
             ),
-          ),
-          Container(
-            padding: EdgeInsets.only(left: 10),
-            width: double.infinity,
-            child: Wrap(
-              alignment: WrapAlignment.start,
-              spacing: 10,
-              runSpacing: 10,
-              children: _cuisines.map(_buildCuisine).toList(),
+            SizedBox(height: 20),
+            UnderlinedTextField(
+              hintText: 'An Address',
+              controller: _addC,
+              style: _theme.textTheme.bodyText1,
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
             ),
-          ),
-          SizedBox(height: 15),
-        ],
+            SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(left: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'CUISINES',
+                    style: _theme.textTheme.caption?.copyWith(color: swatch[400]),
+                  ),
+                  _cuisines.length < 3
+                      ? InkWell(
+                          child: SizedBox(
+                            height: 40,
+                            child: Icon(Icons.add, color: swatch[500]),
+                          ),
+                          onTap: _pickCuisine,
+                        )
+                      : SizedBox(height: 40),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.only(left: 10),
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.start,
+                spacing: 10,
+                runSpacing: 10,
+                children: _cuisines.map(_buildCuisine).toList(),
+              ),
+            ),
+            SizedBox(height: 15),
+          ],
+        ),
       ),
     );
   }
@@ -212,7 +219,9 @@ class _RestaurantFormState extends EntityCreator<RestaurantForm> {
   }
 
   @override
-  Future<bool> createEntity() {
+  FutureOr<SubmitStatus> submit() {
+    final valid = _formKey.currentState?.validate() ?? false;
+    if (!valid) return SubmitStatus.INVALID;
     final restaurant = Restaurant(
       id: id,
       owner: _aBloc.account.id,
@@ -221,9 +230,15 @@ class _RestaurantFormState extends EntityCreator<RestaurantForm> {
       cuisines: _cuisines,
     );
     if (widget.restaurant == null) {
-      return _bloc.createNew(restaurant).then((_) => true).catchError((_) => false);
+      return _bloc
+          .createNew(restaurant)
+          .then((_) => SubmitStatus.SUCCESS)
+          .catchError((_) => SubmitStatus.FAIL);
     } else {
-      return _bloc.update(restaurant).then((_) => true).catchError((_) => false);
+      return _bloc
+          .update(restaurant)
+          .then((_) => SubmitStatus.SUCCESS)
+          .catchError((_) => SubmitStatus.FAIL);
     }
   }
 }

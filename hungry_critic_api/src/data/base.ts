@@ -17,7 +17,7 @@ async function db(): Promise<Db> {
 export class BaseDao<T extends Object> {
   constructor(private collection: string, private type: ClassConstructor<T>) {}
 
-  async fetch(id: string, projection: any = { '_id': 0 }): Promise<T | null> {
+  async fetch(id: string, projection: any = { _id: 0 }): Promise<T | null> {
     const client = await this.init();
     return client.findOne({ id }, { projection });
   }
@@ -57,6 +57,11 @@ export class BaseDao<T extends Object> {
   async update(query: FilterQuery<any>, update: any): Promise<any> {
     const client = await this.init();
     return client.updateOne(query, { $set: update });
+  }
+
+  async rawUpdate(query: FilterQuery<any>, update: any): Promise<any> {
+    const client = await this.init();
+    return client.updateOne(query, update);
   }
 
   async delete(query: FilterQuery<any>): Promise<any> {

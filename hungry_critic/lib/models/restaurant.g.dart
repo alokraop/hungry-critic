@@ -17,7 +17,13 @@ Restaurant _$RestaurantFromJson(Map<String, dynamic> json) {
   )
     ..averageRating = (json['averageRating'] as num).toDouble()
     ..totalRatings = json['totalRatings'] as int
-    ..totalReviews = json['totalReviews'] as int;
+    ..totalReviews = json['totalReviews'] as int
+    ..bestReview = json['bestReview'] == null
+        ? null
+        : Review.fromJson(json['bestReview'] as Map<String, dynamic>)
+    ..worstReview = json['worstReview'] == null
+        ? null
+        : Review.fromJson(json['worstReview'] as Map<String, dynamic>);
 }
 
 Map<String, dynamic> _$RestaurantToJson(Restaurant instance) =>
@@ -30,4 +36,6 @@ Map<String, dynamic> _$RestaurantToJson(Restaurant instance) =>
       'averageRating': instance.averageRating,
       'totalRatings': instance.totalRatings,
       'totalReviews': instance.totalReviews,
+      'bestReview': instance.bestReview,
+      'worstReview': instance.worstReview,
     };

@@ -54,7 +54,7 @@ final theme = ThemeData(
     ),
     caption: TextStyle(
       debugLabel: 'stock badge',
-      fontSize: 12,
+      fontSize: 12.5,
       decoration: TextDecoration.none,
     ),
   ),

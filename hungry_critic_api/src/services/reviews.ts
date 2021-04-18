@@ -2,7 +2,7 @@ import { MongoError } from 'mongodb';
 import { Service } from 'typedi';
 import { APIError } from '../controllers/middleware/error';
 import { ReviewsDao } from '../data/reviews';
-import { Review } from '../models/review';
+import { Review, ReviewResponse } from '../models/review';
 
 @Service()
 export class ReviewService {
@@ -15,13 +15,13 @@ export class ReviewService {
   }
 
   async findBest(id: string): Promise<Review | undefined> {
-    const cursor = await this.dao.findSorted({ restaurant: id }, { rating: 1 });
+    const cursor = await this.dao.findSorted({ restaurant: id }, { rating: -1 });
     const results = await cursor.limit(1).toArray();
     return results.length === 0 ? undefined : results[0];
   }
 
   async findWorst(id: string): Promise<Review | undefined> {
-    const cursor = await this.dao.findSorted({ restaurant: id }, { rating: -1 });
+    const cursor = await this.dao.findSorted({ restaurant: id }, { rating: 1 });
     const results = await cursor.limit(1).toArray();
     return results.length === 0 ? undefined : results[0];
   }
@@ -50,5 +50,23 @@ export class ReviewService {
 
   deleteAll(rId: string): Promise<any> {
     return this.dao.deleteAll({ restaurant: rId });
+  }
+
+  async updateReply(restaurant: string, author: string, reply: ReviewResponse): Promise<Review> {
+    const review = await this.dao.find({ restaurant, author });
+    if (!review) throw new APIError("This review doesn't exist");
+
+    review.reply = reply.response;
+    await this.dao.update({ restaurant, author }, review);
+    return review;
+  }
+
+  async deleteReply(restaurant: string, author: string): Promise<Review> {
+    const review = await this.dao.find({ restaurant, author });
+    if (!review) throw new APIError("This review doesn't exist");
+
+    delete review.reply;
+    await this.dao.rawUpdate({ restaurant, author }, { $unset: { reply: '' } });
+    return review;
   }
 }

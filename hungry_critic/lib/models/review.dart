@@ -3,15 +3,20 @@ import 'package:json_annotation/json_annotation.dart';
 part 'review.g.dart';
 
 _fromDate(DateTime time) => time.millisecondsSinceEpoch;
-_toDate(int millis) => DateTime.fromMicrosecondsSinceEpoch(millis);
+_toDate(int millis) => DateTime.fromMillisecondsSinceEpoch(millis);
 
 @JsonSerializable()
 class Review {
   Review({
     required this.author,
+    required this.authorName,
     required this.rating,
     this.review,
-  }) : timestamp = DateTime.now();
+    this.reply,
+    DateTime? timestamp,
+  }) {
+    this.timestamp = timestamp ?? DateTime.now();
+  }
 
   factory Review.fromJson(Map<String, dynamic> json) => _$ReviewFromJson(json);
 
@@ -19,12 +24,16 @@ class Review {
 
   final String author;
 
-  final int rating;
+  final String authorName;
+
+  final double rating;
 
   final String? review;
 
+  String? reply;
+
   @JsonKey(toJson: _fromDate, fromJson: _toDate)
-  final DateTime timestamp;
+  late DateTime timestamp;
 
   Map<String, dynamic> toJson() => _$ReviewToJson(this);
 }

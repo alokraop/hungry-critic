@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hungry_critic/blocs/review.dart';
+import 'package:hungry_critic/models/review.dart';
+import 'package:hungry_critic/shared/timestamp.dart';
 
 import '../../blocs/account.dart';
 import '../../blocs/restaurant.dart';
@@ -29,9 +32,11 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
   late ThemeData _theme;
   late RestaurantBloc _bloc;
   late AccountBloc _aBloc;
+  late ReviewBloc _rBloc;
 
   late Restaurant _restaurant;
 
+  PageController _pageC = PageController();
   StreamSubscription<List<String>>? _sub;
 
   bool _highlights = true;
@@ -53,16 +58,18 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _theme = Theme.of(context);
+    _bloc = BlocsContainer.of(context).rBloc;
+    _aBloc = BlocsContainer.of(context).aBloc;
+    _rBloc = BlocsContainer.of(context).reBloc;
     if (_sub == null) {
       _restaurant = widget.restaurant;
       _sub = _bloc.restaurants.listen((_) {
         final restaurant = _bloc.find(_restaurant.id);
         if (restaurant != null) _restaurant = restaurant;
+        setState(() {});
       });
     }
-    _theme = Theme.of(context);
-    _bloc = BlocsContainer.of(context).rBloc;
-    _aBloc = BlocsContainer.of(context).aBloc;
   }
 
   @override
@@ -83,18 +90,18 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
                 _buildForehead(),
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.only(top: 25, left: 10),
+                    padding: EdgeInsets.only(top: 25),
                     child: Column(
                       children: [
                         _buildInfo(),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           child: Divider(thickness: 0.75),
                         ),
                         _buildLocation(),
                         _buildTimings(),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           child: Divider(thickness: 0.75),
                         ),
                         Expanded(child: _buildReviews()),
@@ -189,12 +196,14 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
   }
 
   _buildInfo() {
-    return Row(
-      children: [
-        SizedBox(width: 5),
-        Expanded(child: _buildTitle()),
-        _buildRating(),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(left: 15),
+      child: Row(
+        children: [
+          Expanded(child: _buildTitle()),
+          _buildRating(),
+        ],
+      ),
     );
   }
 
@@ -239,7 +248,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
 
   _buildLocation() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.only(bottom: 15, left: 10, right: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -271,7 +280,6 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
                         color: swatch,
                       ),
                     ),
-                    SizedBox(width: 15),
                   ],
                 ),
               ),
@@ -293,7 +301,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
 
   _buildTimings() {
     return Padding(
-      padding: const EdgeInsets.only(top: 15),
+      padding: const EdgeInsets.only(top: 15, left: 10, right: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -319,7 +327,6 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Icon(Icons.call_outlined, color: swatch),
-                    SizedBox(width: 15),
                   ],
                 ),
               ),
@@ -344,55 +351,178 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
       children: [
         Container(
           height: 50,
-          margin: EdgeInsets.only(right: 15),
+          margin: EdgeInsets.symmetric(horizontal: 15),
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Row(
-            children: [
-              Flexible(
-                fit: FlexFit.tight,
-                child: GestureDetector(
-                  onTap: () => setState(() => _highlights = true),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: _highlights ? swatch : background,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'HIGHLIGHTS',
-                      style: _theme.textTheme.bodyText1?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: greySwatch[_highlights ? 50 : 400],
-                      ),
-                    ),
-                  ),
+          child: _buildTabs(),
+        ),
+        Expanded(
+          child: _buildPages(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPages() {
+    final mine = _rBloc.find(_aBloc.account.id);
+    final best = _restaurant.bestReview;
+    final worst = _restaurant.worstReview;
+    return PageView(
+      controller: _pageC,
+      children: [
+        ListView(
+          padding: EdgeInsets.symmetric(horizontal: 15),
+          children: [
+            SizedBox(height: 20),
+            if (mine != null) _buildHighlight('MY REVIEW', mine),
+            if (best != null) _buildHighlight('BEST REVIEW', best),
+            if (worst != null) _buildHighlight('WORST REVIEW', worst),
+          ],
+        ),
+        StreamBuilder(
+          stream: _rBloc.reviews,
+          initialData: <String>[],
+          builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
+            final data = snapshot.data;
+            if (data == null) return Container();
+            return ListView(
+              padding: EdgeInsets.symmetric(horizontal: 32.5),
+              children: [
+                SizedBox(height: 20),
+                ...data
+                    .map((id) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: _buildReview(_rBloc.find(id)),
+                        ))
+                    .toList()
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabs() {
+    return Row(
+      children: [
+        Flexible(
+          fit: FlexFit.tight,
+          child: GestureDetector(
+            onTap: () => setState(() {
+              _highlights = true;
+              _pageC.animateToPage(0, duration: Duration(milliseconds: 200), curve: Curves.easeIn);
+            }),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: _highlights ? swatch : background,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                'HIGHLIGHTS',
+                style: _theme.textTheme.bodyText1?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: greySwatch[_highlights ? 50 : 400],
                 ),
               ),
-              Flexible(
-                fit: FlexFit.tight,
-                child: GestureDetector(
-                  onTap: () => setState(() => _highlights = false),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: _highlights ? background : swatch,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'REVIEWS',
-                      style: _theme.textTheme.bodyText1?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: greySwatch[_highlights ? 400 : 50],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
+        ),
+        Flexible(
+          fit: FlexFit.tight,
+          child: GestureDetector(
+            onTap: () => setState(() {
+              _highlights = false;
+              _pageC.animateToPage(1, duration: Duration(milliseconds: 200), curve: Curves.easeIn);
+            }),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: _highlights ? background : swatch,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                'REVIEWS',
+                style: _theme.textTheme.bodyText1?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: greySwatch[_highlights ? 400 : 50],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  _buildHighlight(String label, Review review) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 17.5),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label),
+          SizedBox(height: 10),
+          _buildReview(review),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReview(Review? review) {
+    if (review == null) return Container();
+    final content = review.review;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    review.authorName,
+                    style: _theme.textTheme.subtitle1?.copyWith(color: greySwatch[800]),
+                  ),
+                  SizedBox(width: 5),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 1),
+                    child: Timestamp(time: review.timestamp, relative: true, ignoreDate: false),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(7.5),
+                color: findColor(review.rating),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 7.5, vertical: 3),
+              child: Text(
+                review.rating.toStringAsFixed(1),
+                style: _theme.textTheme.bodyText2?.copyWith(color: greySwatch[50]),
+              ),
+            ),
+          ],
+        ),
+        if (content != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(
+              content,
+              style: _theme.textTheme.bodyText2,
+            ),
+          ),
+        _buildReply(review),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7.5),
+          child: Divider(thickness: 0.75),
         ),
       ],
     );
@@ -400,7 +530,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
 
   _startEdit() {
     Navigator.of(context).push(
-      CreateEntity(entity: _restaurant, restaurant: true),
+      CreateEntity(type: Entity.RESTAURANT, entity: _restaurant),
     );
   }
 
@@ -442,9 +572,118 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
   }
 
   _startReview() {
-    Navigator.of(context).push(
-      CreateEntity(entity: _restaurant, restaurant: true),
+    Navigator.of(context).push(CreateEntity(type: Entity.REVIEW));
+  }
+
+  _buildReply(Review review) {
+    final reply = review.reply;
+    if (reply == null) {
+      final account = _aBloc.account;
+      switch (account.role) {
+        case UserRole.CUSTOMER:
+        case UserRole.ADMIN:
+          return Container();
+        case UserRole.OWNER:
+          if (account.id != _restaurant.owner) return Container();
+          return _buildRButton(review);
+      }
+    } else {
+      return _buildRContent(review, reply);
+    }
+  }
+
+  bool canEditReply() {
+    final account = _aBloc.account;
+    switch (account.role) {
+      case UserRole.CUSTOMER:
+        return false;
+      case UserRole.OWNER:
+        return account.id == _restaurant.owner;
+      case UserRole.ADMIN:
+        return true;
+    }
+  }
+
+  _buildRButton(Review review) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: () => _startReply(review),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.reply, color: swatch),
+                SizedBox(width: 5),
+                Text(
+                  'Reply',
+                  style: _theme.textTheme.bodyText1?.copyWith(
+                    color: swatch,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
+  }
+
+  _buildRContent(Review review, String reply) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: EdgeInsets.only(left: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 2),
+            child: Text(
+              'MANAGEMENT RESPONSE:',
+              style: _theme.textTheme.bodyText2?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: greySwatch[700],
+              ),
+            ),
+          ),
+          Text(
+            reply,
+            style: _theme.textTheme.bodyText2?.copyWith(
+              fontWeight: FontWeight.w300,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          if (canEditReply())
+            InkWell(
+              onTap: () => _startReply(review),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.edit, color: swatch, size: 18),
+                    SizedBox(width: 5),
+                    Text(
+                      'Edit',
+                      style: _theme.textTheme.bodyText2?.copyWith(
+                        color: swatch,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  _startReply(Review review) {
+    Navigator.of(context).push(CreateEntity(type: Entity.REPLY, entity: review));
   }
 
   @override

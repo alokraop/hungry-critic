@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 
 import { Container } from 'typedi';
-import { Review } from '../models/review';
+import { Review, ReviewResponse } from '../models/review';
 import { RestaurantService } from '../services/restaurants';
 import { ReviewService } from '../services/reviews';
 import { Validate } from './middleware/validation';
@@ -32,3 +32,19 @@ reviewRouter.delete('/:id', async (req: Request, res: Response) => {
   await rService().deleteReview(req.params.id, res.locals.rId, res.locals.info);
   res.send();
 });
+
+reviewRouter.put('/:id/replies', Validate(ReviewResponse), async (req: Request, res: Response) => {
+  const author = req.params.id;
+  await rService().addReply(res.locals.rId, author, req.body, res.locals.info);
+  res.status(201).send();
+});
+
+reviewRouter.delete(
+  '/:id/replies',
+  Validate(ReviewResponse),
+  async (req: Request, res: Response) => {
+    const author = req.params.id;
+    await rService().removeReply(res.locals.rId, author, res.locals.info);
+    res.status(201).send();
+  },
+);
