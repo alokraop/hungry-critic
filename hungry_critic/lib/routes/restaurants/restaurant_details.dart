@@ -46,14 +46,14 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
     switch (account.role) {
       case UserRole.ADMIN:
         return true;
-      case UserRole.CUSTOMER:
+      case UserRole.USER:
         return false;
       case UserRole.OWNER:
         return account.id == widget.restaurant.owner;
     }
   }
 
-  bool get canReview => _aBloc.account.role == UserRole.CUSTOMER;
+  bool get canReview => _aBloc.account.role == UserRole.USER;
 
   @override
   void didChangeDependencies() {
@@ -580,7 +580,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
     if (reply == null) {
       final account = _aBloc.account;
       switch (account.role) {
-        case UserRole.CUSTOMER:
+        case UserRole.USER:
         case UserRole.ADMIN:
           return Container();
         case UserRole.OWNER:
@@ -595,7 +595,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
   bool canEditReply() {
     final account = _aBloc.account;
     switch (account.role) {
-      case UserRole.CUSTOMER:
+      case UserRole.USER:
         return false;
       case UserRole.OWNER:
         return account.id == _restaurant.owner;

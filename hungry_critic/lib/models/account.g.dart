@@ -46,3 +46,39 @@ Map<String, dynamic> _$AccountToJson(Account instance) => <String, dynamic>{
       'name': instance.name,
       'role': _encodeRole(instance.role),
     };
+
+User _$UserFromJson(Map<String, dynamic> json) {
+  return User(
+    id: json['id'] as String,
+    method: _decodeMethod(json['method'] as int?),
+    email: json['email'] as String?,
+    name: json['name'] as String?,
+    role: _decodeRole(json['role'] as int?),
+    settings: Settings.fromJson(json['settings'] as Map<String, dynamic>),
+  );
+}
+
+Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
+      'id': instance.id,
+      'method': _encodeMethod(instance.method),
+      'email': instance.email,
+      'name': instance.name,
+      'role': _encodeRole(instance.role),
+      'settings': instance.settings,
+    };
+
+Settings _$SettingsFromJson(Map<String, dynamic> json) {
+  return Settings(
+    blocked: json['blocked'] as bool,
+    initialized: json['initialized'] as bool,
+    method: _decodeMethod(json['method'] as int?),
+    attempts: json['attempts'] as int,
+  );
+}
+
+Map<String, dynamic> _$SettingsToJson(Settings instance) => <String, dynamic>{
+      'blocked': instance.blocked,
+      'initialized': instance.initialized,
+      'method': _encodeMethod(instance.method),
+      'attempts': instance.attempts,
+    };

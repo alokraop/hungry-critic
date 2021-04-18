@@ -9,7 +9,7 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../apis/account.dart';
 import '../apis/signIn.dart';
 import '../blocs/account.dart';
-import '../models/account.dart';
+import '../models/account.dart' show Account, SignInMethod, AuthStatus, EmailData, Credentials;
 import '../shared/aspects.dart';
 
 class SignInData {

@@ -14,7 +14,7 @@ class EmailData {
   EmailData(this.email, this.password, this.create);
 }
 
-enum UserRole { CUSTOMER, OWNER, ADMIN }
+enum UserRole { USER, OWNER, ADMIN }
 
 _encodeMethod(SignInMethod method) => method.index;
 _decodeMethod(int? index) {
@@ -28,7 +28,7 @@ _encodeRole(UserRole role) => role.index;
 _decodeRole(int? index) {
   return UserRole.values.firstWhere(
     (v) => v.index == index,
-    orElse: () => UserRole.CUSTOMER,
+    orElse: () => UserRole.USER,
   );
 }
 
@@ -72,7 +72,7 @@ class Account {
     required this.method,
     this.email,
     this.name,
-    this.role = UserRole.CUSTOMER,
+    this.role = UserRole.USER,
   });
 
   factory Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
@@ -118,6 +118,53 @@ class Account {
       role: role ?? this.role,
     )..token = token;
   }
+}
+
+@JsonSerializable()
+class User extends Account {
+  User({
+    required String id,
+    required SignInMethod method,
+    String? email,
+    String? name,
+    UserRole role = UserRole.USER,
+    required this.settings,
+  }) : super(
+          id: id,
+          method: method,
+          email: email,
+          name: name,
+          role: role,
+        );
+
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+
+  final Settings settings;
+
+  Map<String, dynamic> toJson() => _$UserToJson(this);
+}
+
+@JsonSerializable()
+class Settings {
+  Settings({
+    required this.blocked,
+    required this.initialized,
+    required this.method,
+    required this.attempts,
+  });
+
+  final bool blocked;
+
+  final bool initialized;
+
+  @JsonKey(toJson: _encodeMethod, fromJson: _decodeMethod)
+  final SignInMethod method;
+
+  final int attempts;
+
+  factory Settings.fromJson(Map<String, dynamic> json) => _$SettingsFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SettingsToJson(this);
 }
 
 enum AuthStatus {

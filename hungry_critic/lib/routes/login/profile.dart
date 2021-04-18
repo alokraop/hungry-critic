@@ -60,7 +60,7 @@ class _EditProfileState extends State<EditProfile> {
 
   final _nameC = TextEditingController();
 
-  UserRole _role = UserRole.CUSTOMER;
+  UserRole _role = UserRole.USER;
 
   var _mode = AutovalidateMode.disabled;
 
@@ -158,7 +158,7 @@ class _EditProfileState extends State<EditProfile> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildOption(UserRole.CUSTOMER, 'CUSTOMER'),
+                  _buildOption(UserRole.USER, 'CUSTOMER'),
                   SizedBox(width: 2),
                   _buildOption(UserRole.OWNER, 'OWNER'),
                 ],

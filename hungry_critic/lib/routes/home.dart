@@ -111,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _findButton(UserRole role) {
-    if (role == UserRole.CUSTOMER) return null;
+    if (role != UserRole.OWNER) return null;
     if(_selectedIndex != 0) return null;
     return _buildButton('RESTAURANT', Icons.add, () => _createRestaurant());
   }

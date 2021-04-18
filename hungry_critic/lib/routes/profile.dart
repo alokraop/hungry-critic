@@ -6,7 +6,7 @@ import '../shared/colors.dart';
 import '../shared/context.dart';
 
 const _roleMap = {
-  UserRole.CUSTOMER: 'Customer',
+  UserRole.USER: 'Customer',
   UserRole.OWNER: 'Owner',
   UserRole.ADMIN: 'Admin',
 };

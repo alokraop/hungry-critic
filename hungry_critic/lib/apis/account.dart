@@ -17,9 +17,14 @@ class AccountApi {
 
   final Map<String, String> headers;
 
+  Future<List<User>> fetchAll() async {
+    final response = await http.get(url(), headers: headers);
+    List rs = jsonDecode(response);
+    return rs.map((r) => User.fromJson(r)).toList();
+  }
+
   Future<Account?> fetchAccount(String id) async {
     final response = await http.get(url(id), headers: headers);
-    if (response == null) return null;
     return Account.fromJson(jsonDecode(response));
   }
 
@@ -32,5 +37,9 @@ class AccountApi {
   Future<void> updateAccount(Account account) async {
     final body = jsonEncode(account);
     await http.put(url(account.id), headers: headers, body: body);
+  }
+
+  Future deleteAccount(Account account) {
+    return http.delete(url(account.id), headers: headers);
   }
 }

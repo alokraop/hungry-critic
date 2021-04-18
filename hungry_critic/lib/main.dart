@@ -1,14 +1,16 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hungry_critic/blocs/review.dart';
-import 'package:hungry_critic/shared/colors.dart';
 
 import 'blocs/account.dart';
 import 'blocs/restaurant.dart';
+import 'blocs/review.dart';
+import 'blocs/users.dart';
+import 'models/account.dart';
 import 'router.dart';
 import 'routes/login/login.dart';
 import 'shared/aspects.dart';
+import 'shared/colors.dart';
 import 'shared/config.dart';
 import 'shared/context.dart';
 
@@ -81,6 +83,8 @@ class _HungryCriticState extends State<HungryCritic> {
 
   late ReviewBloc _reBloc;
 
+  late UserBloc _uBloc;
+
   @override
   void initState() {
     super.initState();
@@ -130,6 +134,7 @@ class _HungryCriticState extends State<HungryCritic> {
     return BlocsContainer(
       aBloc: _self,
       rBloc: _rBloc,
+      uBloc: _uBloc,
       reBloc: _reBloc,
       child: MainRouter(
         theme: theme,
@@ -144,5 +149,9 @@ class _HungryCriticState extends State<HungryCritic> {
     _rBloc = RestaurantBloc(_self);
     _rBloc.init();
     _reBloc = ReviewBloc(_self, _rBloc);
+    _uBloc = UserBloc(_self);
+    if (_self.account.role == UserRole.ADMIN) {
+      _uBloc.init();
+    }
   }
 }
