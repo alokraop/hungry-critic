@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import { APIError } from '../controllers/middleware/error';
 import { AccountDao } from '../data/accounts';
-import { Account, AuthReceipt, Profile, Settings, UserRole } from '../models/account';
+import { Account, AuthReceipt, Settings, UserRole } from '../models/account';
 import { TokenInfo } from '../models/internal';
 import { RestaurantService } from './restaurants';
 import { TokenService } from './token';
@@ -48,23 +48,6 @@ export class AccountService {
       },
     );
     return { id: account.id, token: this.token.create(account) };
-  }
-
-  async updateProfile(id: string, profile: Profile, caller: TokenInfo): Promise<string> {
-    if (id !== caller.id && caller.role !== UserRole.ADMIN) {
-      throw new APIError("You don't have priviledges to modify this account!");
-    }
-    return this.dao.update({ id }, profile);
-  }
-
-  async updateAttempts(id: string, caller: TokenInfo): Promise<any> {
-    if (id !== caller.id) {
-      throw new APIError("You don't have priviledges to modify this account!");
-    }
-    const account = await this.dao.fetch(id);
-    if (!account) throw new APIError('This account does not exist');
-    if (account.settings.blocked) throw new APIError("Can't modify blocked account!");
-    return this.markFail(account);
   }
 
   async updateAccount(id: string, account: Account, caller: TokenInfo): Promise<string> {

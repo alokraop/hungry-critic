@@ -416,6 +416,10 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
               break;
             case 'too-many-requests':
               _status = AuthStatus.BLOCKED;
+              break;
+            case 'email-already-in-use':
+              _status = AuthStatus.DUPLICATE;
+              break;
           }
         } else if (exception is LoginException) {
           Aspects.instance.log('Login -> $method -> Fail');
@@ -467,6 +471,8 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
         return 'Incorrect password!';
       case AuthStatus.BLOCKED:
         return 'This account has been blocked! Contact admin!';
+      case AuthStatus.DUPLICATE:
+        return 'This account already exists! Try signing in!';
       default:
         return null;
     }
