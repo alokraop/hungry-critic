@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'blocs/account.dart';
 import 'blocs/review.dart';
 import 'models/restaurant.dart';
-import 'routes/blocked.dart';
+import 'routes/uninitialized.dart';
 import 'routes/home.dart';
 import 'routes/restaurants/restaurant_details.dart';
 import 'shared/config.dart';

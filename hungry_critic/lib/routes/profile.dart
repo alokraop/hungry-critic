@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hungry_critic/flaps/creation_flap.dart';
 
 import '../blocs/account.dart';
 import '../models/account.dart';
@@ -108,7 +109,11 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  _editProfile() => Navigator.of(context).pushNamed('/edit-profile');
+  _editProfile() {
+    Navigator.of(context).push(
+      CreateEntity(type: Entity.USER, entity: _bloc.account),
+    );
+  }
 
   _startLogout() async {
     await _bloc.logout();

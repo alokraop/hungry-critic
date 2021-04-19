@@ -694,8 +694,15 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
       children: [
         _buildAction('Edit', Icons.edit, () => _startReview(review)),
         SizedBox(width: 15),
-        _buildAction('Delete', Icons.delete, () => {}),
+        _buildAction('Delete', Icons.delete, () => _deleteReview(review)),
       ],
+    );
+  }
+
+  _deleteReview(Review review) {
+    _showDialog(
+      'This review and all its comments will be deleted',
+      () => _rBloc.delete(review),
     );
   }
 

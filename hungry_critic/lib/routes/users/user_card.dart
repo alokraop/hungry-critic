@@ -9,15 +9,12 @@ class UserCard extends StatelessWidget {
     Key? key,
     required this.user,
     this.onUpdate,
-    this.onBlock,
     this.onDelete,
   }) : super(key: key);
 
   final Account user;
 
   final Function()? onUpdate;
-
-  final Function()? onBlock;
 
   final Function()? onDelete;
 
@@ -131,7 +128,7 @@ class UserCard extends StatelessWidget {
   }
 
   _buildDelete(BuildContext context) {
-    return _buildSection(context, 'DELETE', Icons.delete, () => onUpdate?.call());
+    return _buildSection(context, 'DELETE', Icons.delete, () => onDelete?.call());
   }
 
   _buildSection(

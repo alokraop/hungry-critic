@@ -6,6 +6,7 @@ import { AccountService } from './accounts';
 import { AuthService } from './auth';
 import { HashingService } from './hash';
 import { LoggingService } from './logging';
+import { RestaurantService } from './restaurants';
 import { TokenService } from './token';
 jest.mock('../data/auth');
 jest.mock('./account');
@@ -29,7 +30,7 @@ describe('Sign up tests', () => {
     const dao = new FirebaseAuthDao();
     const logger = new LoggingService();
     const token = new TokenService(logger);
-    const aService = new AccountService(new AccountDao(), token);
+    const aService = new AccountService(new AccountDao(), token, <RestaurantService>{});
     const hasher = new HashingService(logger);
     service = new AuthService(dao, aService, logger, token, hasher);
   });
@@ -66,7 +67,7 @@ describe('Sign in tests', () => {
     const dao = new FirebaseAuthDao();
     const logger = new LoggingService();
     const token = new TokenService(logger);
-    const aService = new AccountService(new AccountDao(), token);
+    const aService = new AccountService(new AccountDao(), token, <RestaurantService>{});
     const hasher = new HashingService(logger);
     service = new AuthService(dao, aService, logger, token, hasher);
   });

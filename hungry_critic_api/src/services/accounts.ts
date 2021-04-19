@@ -3,11 +3,16 @@ import { APIError } from '../controllers/middleware/error';
 import { AccountDao } from '../data/accounts';
 import { Account, AuthReceipt, Profile, Settings, UserRole } from '../models/account';
 import { TokenInfo } from '../models/internal';
+import { RestaurantService } from './restaurants';
 import { TokenService } from './token';
 
 @Service()
 export class AccountService {
-  constructor(private dao: AccountDao, private token: TokenService) {}
+  constructor(
+    private dao: AccountDao,
+    private token: TokenService,
+    private rService: RestaurantService,
+  ) {}
 
   async fetchAll(caller: TokenInfo): Promise<Account[]> {
     if (caller.role !== UserRole.ADMIN) {
@@ -90,8 +95,18 @@ export class AccountService {
   }
 
   async delete(id: string, caller: TokenInfo): Promise<any> {
-    //TODO: Delete all relevant restaurants/reviews
-    throw new Error('Method not implemented.');
+    if (caller.role != UserRole.ADMIN) {
+      throw new APIError("You don't have privilidges to delete this account!");
+    }
+    const account = await this.dao.fetch(id);
+    if (!account) throw new APIError("This account doesn't exist");
+    await this.dao.delete({ id });
+    switch (account.role) {
+      case UserRole.CUSTOMER:
+        return this.rService.deleteReviews(id);
+      case UserRole.OWNER:
+        return this.rService.deleteAll(id);
+    }
   }
 
   private flatten(settings: Settings) {

@@ -52,6 +52,12 @@ export class ReviewService {
     return this.dao.deleteAll({ restaurant: rId });
   }
 
+  async deleteFor(of: string): Promise<Array<Review>> {
+    const reviews = await this.dao.findAll({ author: of });
+    await this.dao.deleteAll({ author: of });
+    return reviews;
+  }
+
   async updateReply(restaurant: string, author: string, reply: ReviewResponse): Promise<Review> {
     const review = await this.dao.find({ restaurant, author });
     if (!review) throw new APIError("This review doesn't exist");

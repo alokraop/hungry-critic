@@ -106,12 +106,34 @@ export class RestaurantService {
       this.fetch(rId),
     ]);
 
-    await this.rService.delete(rId, caller.id);
+    await this.rService.delete(rId, id);
 
     this.removeRating(restaurant, oldReview);
     await this.assignHighlights(restaurant);
 
     return this.dao.update({ id: rId }, restaurant);
+  }
+
+  async deleteReviews(of: string): Promise<any> {
+    const reviews = await this.rService.deleteFor(of);
+    const ids = Array.from(new Set(reviews.map((r) => r.restaurant)));
+    const restaurants = await this.dao.findAll({ id: { $in: ids } });
+
+    const futures = restaurants.map(async (r) => this.removeReviews(r, reviews));
+    return Promise.all(futures);
+  }
+
+  private async removeReviews(restaurant: RestaurantDetails, reviews: Array<Review>) {
+    const rs = reviews.filter((r) => r.restaurant === restaurant.id);
+    rs.forEach((r) => this.removeRating(restaurant, r));
+    await this.assignHighlights(restaurant);
+    return this.dao.update({ id: restaurant.id }, restaurant);
+  }
+
+  async deleteAll(owner: string): Promise<any> {
+    const restaurants = await this.dao.findAll({ owner });
+    await this.dao.deleteAll({ owner });
+    return Promise.all(restaurants.map((r) => this.rService.deleteAll(r.id)));
   }
 
   async addReply(id: string, author: string, reply: ReviewResponse, info: TokenInfo): Promise<any> {
@@ -176,11 +198,11 @@ export class RestaurantService {
   }
 
   private updateReviews(restaurant: RestaurantDetails, review: Review) {
-    if(restaurant.bestReview?.author === review.author) {
+    if (restaurant.bestReview?.author === review.author) {
       restaurant.bestReview = review;
       return true;
     }
-    if(restaurant.worstReview?.author === review.author) {
+    if (restaurant.worstReview?.author === review.author) {
       restaurant.worstReview = review;
       return true;
     }

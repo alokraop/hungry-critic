@@ -149,7 +149,7 @@ class _HungryCriticState extends State<HungryCritic> {
     _rBloc = RestaurantBloc(_self);
     _rBloc.init();
     _reBloc = ReviewBloc(_self, _rBloc);
-    _uBloc = UserBloc(_self);
+    _uBloc = UserBloc(_self, _rBloc);
     if (_self.account.role == UserRole.ADMIN) {
       _uBloc.init();
     }

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hungry_critic/flaps/creation_flap.dart';
 
-import '../../blocs/account.dart';
 import '../../blocs/users.dart';
+import '../../flaps/creation_flap.dart';
 import '../../models/account.dart';
 import '../../shared/colors.dart';
 import '../../shared/context.dart';
@@ -19,18 +18,18 @@ class UsersList extends StatefulWidget {
 
 class _UsersListState extends State<UsersList> {
   late UserBloc _bloc;
-  late AccountBloc _aBloc;
+
+  late ThemeData _theme;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _theme = Theme.of(context);
     _bloc = BlocsContainer.of(context).uBloc;
-    _aBloc = BlocsContainer.of(context).aBloc;
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return StreamBuilder(
       stream: _bloc.users,
       initialData: <String>[],
@@ -47,7 +46,7 @@ class _UsersListState extends State<UsersList> {
                     padding: const EdgeInsets.only(left: 12.5, top: 7.5, bottom: 15),
                     child: Text(
                       'Users',
-                      style: theme.textTheme.headline5?.copyWith(
+                      style: _theme.textTheme.headline5?.copyWith(
                         fontWeight: FontWeight.w300,
                         color: swatch[600],
                       ),
@@ -69,12 +68,49 @@ class _UsersListState extends State<UsersList> {
       itemCount: us.length,
       itemBuilder: (context, index) {
         final user = us[index];
-        return UserCard(user: user, onUpdate: () => _startUpdate(user));
+        return UserCard(
+          user: user,
+          onUpdate: () => _startUpdate(user),
+          onDelete: () => _startDelete(user),
+        );
       },
     );
   }
 
   _startUpdate(Account user) {
     Navigator.of(context).push(CreateEntity(type: Entity.USER, entity: user));
+  }
+
+  _startDelete(Account user) {
+    _showDialog(
+      'All their restaurants, reviews, and replies will be deleted',
+      () => _bloc.delete(user),
+    );
+  }
+
+  _showDialog(String content, Function() onConfirm) {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('Are you sure?'),
+        content: Text(
+          content,
+          style: _theme.textTheme.bodyText1?.copyWith(fontWeight: FontWeight.w300),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              onConfirm();
+            },
+            child: Text('YES'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(),
+            child: Text('NO'),
+          ),
+        ],
+      ),
+    );
   }
 }

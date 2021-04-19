@@ -177,7 +177,7 @@ class _EditProfileState extends State<EditProfile> {
     return InkWell(
       onTap: () => setState(() => _role = role),
       child: Container(
-        width: _screen.width * 0.2,
+        width: _screen.width * 0.175,
         padding: EdgeInsets.symmetric(vertical: 7.5),
         alignment: Alignment.center,
         color: _role == role ? Color(0x00000000) : greySwatch[50],

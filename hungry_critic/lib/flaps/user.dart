@@ -98,13 +98,12 @@ class _UserFormState extends EntityCreator<UserForm> {
           Padding(
             padding: const EdgeInsets.only(bottom: 15),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Initialize?',
                   style: _theme.textTheme.bodyText1,
                 ),
-                SizedBox(width: 7.5),
                 _buildOptionSet(_initialized, (i) => setState(() => _initialized = i)),
               ],
             ),

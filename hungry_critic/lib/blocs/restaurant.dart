@@ -124,4 +124,13 @@ class RestaurantBloc {
 
     _publish();
   }
+
+  Future deleteReviews(String id) {
+    return init();
+  }
+
+  Future deleteRestaurants(String id) async {
+    _restaurants = _restaurants.where((rId) => _rMap[rId]?.owner != id).toList();
+    _publish();
+  }
 }

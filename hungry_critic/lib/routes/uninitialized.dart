@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hungry_critic/blocs/account.dart';
-import 'package:hungry_critic/shared/colors.dart';
-import 'package:hungry_critic/shared/context.dart';
+
+import '../blocs/account.dart';
+import '../shared/colors.dart';
+import '../shared/context.dart';
 
 class BlockedScreen extends StatefulWidget {
   const BlockedScreen({Key? key, required this.onLogout}) : super(key: key);
@@ -29,7 +30,6 @@ class _BlockedScreenState extends State<BlockedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = _bloc.account.settings;
     return Container(
       color: swatch[400],
       padding: EdgeInsets.symmetric(horizontal: 15),
@@ -37,9 +37,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            settings.blocked
-                ? 'This account has been blocked!'
-                : 'This account needs to be activated!',
+            'This account needs to be activated!',
             style: _theme.textTheme.subtitle2?.copyWith(color: greySwatch[50]),
           ),
           SizedBox(height: 10),
@@ -53,14 +51,14 @@ class _BlockedScreenState extends State<BlockedScreen> {
                     ),
                     SizedBox(width: 5),
                     Text(
-                      'Your admin hasn\'t allowed it yet!',
+                      'Your admin is yet to activate the account!',
                       style: _theme.textTheme.subtitle2?.copyWith(color: greySwatch[50]),
                       textAlign: TextAlign.center,
                     )
                   ],
                 )
               : Text(
-                  'You can proceed after your admin allows it',
+                  'You can proceed after your admin activates it',
                   style: _theme.textTheme.subtitle2?.copyWith(color: greySwatch[50]),
                   textAlign: TextAlign.center,
                 ),
@@ -73,9 +71,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                     ? SizedBox(
                         height: 30,
                         width: 30,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
                       )
                     : Text(
                         _fail ? 'TRY AGAIN' : 'REFRESH',
