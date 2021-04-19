@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hungry_critic/flaps/creation_flap.dart';
 
 import '../../blocs/account.dart';
 import '../../blocs/users.dart';
@@ -63,13 +64,17 @@ class _UsersListState extends State<UsersList> {
   }
 
   Widget _buildRecords(List<String> ids) {
-    final us = ids.map(_bloc.find).whereType<User>().toList();
+    final us = ids.map(_bloc.find).whereType<Account>().toList();
     return ListView.builder(
       itemCount: us.length,
       itemBuilder: (context, index) {
         final user = us[index];
-        return UserCard(user: user);
+        return UserCard(user: user, onUpdate: () => _startUpdate(user));
       },
     );
+  }
+
+  _startUpdate(Account user) {
+    Navigator.of(context).push(CreateEntity(type: Entity.USER, entity: user));
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../blocs/account.dart';
@@ -158,9 +159,11 @@ class _EditProfileState extends State<EditProfile> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildOption(UserRole.USER, 'CUSTOMER'),
+                  _buildOption(UserRole.USER),
                   SizedBox(width: 2),
-                  _buildOption(UserRole.OWNER, 'OWNER'),
+                  _buildOption(UserRole.OWNER),
+                  SizedBox(width: 2),
+                  _buildOption(UserRole.ADMIN),
                 ],
               ),
             ),
@@ -170,7 +173,7 @@ class _EditProfileState extends State<EditProfile> {
     );
   }
 
-  _buildOption(UserRole role, String label) {
+  _buildOption(UserRole role) {
     return InkWell(
       onTap: () => setState(() => _role = role),
       child: Container(
@@ -179,7 +182,7 @@ class _EditProfileState extends State<EditProfile> {
         alignment: Alignment.center,
         color: _role == role ? Color(0x00000000) : greySwatch[50],
         child: Text(
-          label,
+          describeEnum(role),
           style: _theme.textTheme.caption?.copyWith(
             color: _role == role ? greySwatch[50] : _theme.primaryColor,
           ),

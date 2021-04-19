@@ -25,32 +25,12 @@ AuthReceipt _$AuthReceiptFromJson(Map<String, dynamic> json) {
   return AuthReceipt(
     id: json['id'] as String,
     token: json['token'] as String,
-    fresh: json['fresh'] as bool,
   );
 }
 
 Account _$AccountFromJson(Map<String, dynamic> json) {
   return Account(
     id: json['id'] as String,
-    method: _decodeMethod(json['method'] as int?),
-    email: json['email'] as String?,
-    name: json['name'] as String?,
-    role: _decodeRole(json['role'] as int?),
-  );
-}
-
-Map<String, dynamic> _$AccountToJson(Account instance) => <String, dynamic>{
-      'id': instance.id,
-      'method': _encodeMethod(instance.method),
-      'email': instance.email,
-      'name': instance.name,
-      'role': _encodeRole(instance.role),
-    };
-
-User _$UserFromJson(Map<String, dynamic> json) {
-  return User(
-    id: json['id'] as String,
-    method: _decodeMethod(json['method'] as int?),
     email: json['email'] as String?,
     name: json['name'] as String?,
     role: _decodeRole(json['role'] as int?),
@@ -58,9 +38,8 @@ User _$UserFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
+Map<String, dynamic> _$AccountToJson(Account instance) => <String, dynamic>{
       'id': instance.id,
-      'method': _encodeMethod(instance.method),
       'email': instance.email,
       'name': instance.name,
       'role': _encodeRole(instance.role),

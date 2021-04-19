@@ -50,31 +50,19 @@ export class AuthService {
       settings: new Settings(hashedPassword, creds.method),
     };
     await this.service.create(account);
-    return this.makeReceipt(account, true);
+    return this.makeReceipt(account);
   }
 
   private async verifyCreds(account: Account, creds: Credentials): Promise<any> {
     const settings = account.settings;
-    if (settings.blocked) throw new APIError('This account has been blocked!');
+    if (settings.blocked) throw new APIError('This account has been blocked!', 412);
     const match = await this.hasher.verify(settings.hashedPassword, creds.firebaseId);
     if (!match) {
-      await this.markFail(account);
-      throw new APIError('The email or password you provided was incorrect');
+      await this.service.markFail(account);
+      throw new APIError('The email or password you provided was incorrect', 403);
     }
-    if (settings.attempts > 0) return this.resetAttempts(account);
-    return this.makeReceipt(account, !settings.initialized);
-  }
-
-  private async markFail(account: Account): Promise<any> {
-    const settings = account.settings;
-    settings.attempts += 1;
-    if (settings.attempts === 3) settings.blocked = true;
-    return this.service.updateSettings(account.id, settings);
-  }
-
-  private async resetAttempts(account: Account): Promise<any> {
-    account.settings.attempts = 0;
-    return this.service.updateSettings(account.id, account.settings);
+    if (settings.attempts > 0) return this.service.resetAttempts(account);
+    return this.makeReceipt(account);
   }
 
   async verify(creds: Credentials): Promise<boolean> {
@@ -94,7 +82,7 @@ export class AuthService {
     }
   }
 
-  private makeReceipt(account: Account, fresh: boolean): AuthReceipt {
-    return { id: account.id, fresh, token: this.token.create(account) };
+  private makeReceipt(account: Account): AuthReceipt {
+    return { id: account.id, token: this.token.create(account) };
   }
 }

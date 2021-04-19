@@ -13,18 +13,19 @@ class UserCard extends StatelessWidget {
     this.onDelete,
   }) : super(key: key);
 
-  final User user;
+  final Account user;
 
-  final Function(User)? onUpdate;
+  final Function()? onUpdate;
 
-  final Function(User)? onBlock;
+  final Function()? onBlock;
 
-  final Function(User)? onDelete;
+  final Function()? onDelete;
+
+  bool get inactive => user.settings.blocked || !user.settings.initialized;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(left: 12.5, right: 12.5, bottom: 20),
+    final content = Container(
       padding: EdgeInsets.symmetric(horizontal: 15),
       decoration: BoxDecoration(
         color: greySwatch[50],
@@ -39,11 +40,24 @@ class UserCard extends StatelessWidget {
       ),
       child: _buildCard(context),
     );
+
+    return Container(
+      margin: EdgeInsets.only(left: 12.5, right: 12.5, bottom: 20),
+      child: inactive
+          ? Banner(
+              location: BannerLocation.topStart,
+              message: user.settings.blocked ? 'BLOCKED' : 'INACTIVE',
+              color: user.settings.blocked ? swatch[800] : greySwatch[600],
+              child: content,
+            )
+          : content,
+    );
   }
 
   Widget _buildCard(BuildContext context) {
     final theme = Theme.of(context);
     final method = describeEnum(user.settings.method).toLowerCase();
+
     return Column(
       children: [
         SizedBox(height: 12.5),
@@ -62,15 +76,15 @@ class UserCard extends StatelessWidget {
                   Container(
                     width: 62.5,
                     decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: swatch, width: 1),
-                        color: swatch),
+                      borderRadius: BorderRadius.circular(5),
+                      color: inactive ? greySwatch[100] : swatch,
+                    ),
                     padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     alignment: Alignment.center,
                     child: Text(
                       describeEnum(user.role),
                       style: theme.textTheme.caption?.copyWith(
-                        color: greySwatch[50],
+                        color: inactive ? greySwatch[700] : greySwatch[50],
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -90,27 +104,34 @@ class UserCard extends StatelessWidget {
   }
 
   _buildActions(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Text(
+              user.id,
+              style: theme.textTheme.bodyText2?.copyWith(
+                color: greySwatch[400],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
         _buildUpdate(context),
-        _buildBlock(context),
         _buildDelete(context),
       ],
     );
   }
 
   _buildUpdate(BuildContext context) {
-    return _buildSection(context, 'EDIT', Icons.edit, () => onUpdate?.call(user));
-  }
-
-  _buildBlock(BuildContext context) {
-    final label = user.settings.blocked ? 'UNBLOCK' : 'BLOCK';
-    final icon = user.settings.blocked ? Icons.bolt : Icons.block;
-    return _buildSection(context, label, icon, () => onBlock?.call(user));
+    return _buildSection(context, 'EDIT', Icons.edit, () => onUpdate?.call());
   }
 
   _buildDelete(BuildContext context) {
-    return _buildSection(context, 'DELETE', Icons.delete, () => onUpdate?.call(user));
+    return _buildSection(context, 'DELETE', Icons.delete, () => onUpdate?.call());
   }
 
   _buildSection(
@@ -120,22 +141,20 @@ class UserCard extends StatelessWidget {
     Function() onTap,
   ) {
     final theme = Theme.of(context);
-    return Flexible(
-      fit: FlexFit.tight,
-      child: InkWell(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 10, bottom: 12.5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: swatch, size: 20),
-              SizedBox(width: 5),
-              Text(
-                label,
-                style: theme.textTheme.bodyText2?.copyWith(color: swatch),
-              ),
-            ],
-          ),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 12.5, left: 10, right: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: swatch, size: 20),
+            SizedBox(width: 5),
+            Text(
+              label,
+              style: theme.textTheme.bodyText2?.copyWith(color: swatch),
+            ),
+          ],
         ),
       ),
     );

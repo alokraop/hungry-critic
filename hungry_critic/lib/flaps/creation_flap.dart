@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hungry_critic/flaps/reply.dart';
 import 'package:hungry_critic/flaps/review.dart';
+import 'package:hungry_critic/flaps/user.dart';
 
 import '../shared/colors.dart';
 import '../shared/popup.dart';
@@ -149,11 +150,16 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
             restaurant: widget.entity,
             updateFlap: _updateFlap,
           ),
-      Entity.REVIEW: () => ReviewForm(key: _creatorKey),
+      Entity.REVIEW: () => ReviewForm(key: _creatorKey, review: widget.entity),
       Entity.REPLY: () {
         final reply = widget.entity;
         if (reply == null) return Container();
         return ReplyForm(key: _creatorKey, review: reply);
+      },
+      Entity.USER: () {
+        final user = widget.entity;
+        if (user == null) return Container();
+        return UserForm(key: _creatorKey, user: user);
       },
     }[widget.type]
         ?.call();

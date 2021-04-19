@@ -23,10 +23,12 @@ export class Credentials {
 export class Settings {
   hashedPassword: HashResult;
 
+  @Allow()
   blocked: boolean;
 
   attempts: number;
 
+  @Allow()
   initialized: boolean;
 
   method: SignInMethod;
@@ -62,7 +64,9 @@ export class Account extends Profile {
   @IsEnum(UserRole)
   role: UserRole;
   
+  @Allow()
   settings: Settings;
+
 }
 
 export interface AuthReceipt {
@@ -70,5 +74,4 @@ export interface AuthReceipt {
 
   token: string;
 
-  fresh: boolean;
 }

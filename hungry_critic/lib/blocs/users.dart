@@ -13,7 +13,7 @@ class UserBloc {
 
   List<String> _users = [];
 
-  Map<String, User> _uMap = {};
+  Map<String, Account> _uMap = {};
 
   final _uSubject = BehaviorSubject<List<String>>();
 
@@ -28,13 +28,13 @@ class UserBloc {
 
   Account? find(String id) => _uMap[id];
 
-  Future update(User account) async {
-    _uMap[account.id] = account;
+  Future update(Account update) {
+    _uMap[update.id] = update;
     _publish();
-    return api.updateAccount(account);
+    return api.updateAccount(update);
   }
 
-  Future delete(User account) async {
+  Future delete(Account account) async {
     _users.remove(account.id);
     _uMap.remove(account.id);
     _publish();

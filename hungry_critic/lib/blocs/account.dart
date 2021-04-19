@@ -28,6 +28,8 @@ class AccountBloc {
 
   Stream<Account> get accountStream => _accountSubject.stream;
 
+  bool get isBlocked => account.settings.blocked || !account.settings.initialized;
+
   Future<bool> init() async {
     final _account = await _provider.find();
     if (_account != null) {
@@ -43,9 +45,16 @@ class AccountBloc {
 
     final receipt = await _api.initProfile(account);
     account.token = receipt.token;
-    
+
     _publish(account);
     return _provider.save(account);
+  }
+
+  Future refreshAccount() async {
+    final newAccount = await _api.fetchAccount(account.id);
+    if (newAccount == null) return null;
+    account.update(newAccount);
+    _publish(account);
   }
 
   Future update(Account changes) {

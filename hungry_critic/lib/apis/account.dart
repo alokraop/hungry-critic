@@ -17,10 +17,10 @@ class AccountApi {
 
   final Map<String, String> headers;
 
-  Future<List<User>> fetchAll() async {
+  Future<List<Account>> fetchAll() async {
     final response = await http.get(url(), headers: headers);
     List rs = jsonDecode(response);
-    return rs.map((r) => User.fromJson(r)).toList();
+    return rs.map((r) => Account.fromJson(r)..token = '').toList();
   }
 
   Future<Account?> fetchAccount(String id) async {

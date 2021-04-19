@@ -12,7 +12,9 @@ import '../shared/context.dart';
 import 'creation_flap.dart';
 
 class ReviewForm extends StatefulWidget {
-  ReviewForm({Key? key}) : super(key: key);
+  ReviewForm({Key? key, this.review}) : super(key: key);
+
+  final Review? review;
 
   @override
   _ReviewFormState createState() => _ReviewFormState();
@@ -42,7 +44,7 @@ class _ReviewFormState extends EntityCreator<ReviewForm> {
     _rBloc = c.reBloc;
     _aBloc = c.aBloc;
 
-    final oldReview = _rBloc.find(_aBloc.account.id);
+    final oldReview = widget.review ?? _rBloc.find(_aBloc.account.id);
     if (oldReview != null) {
       _existing = oldReview;
       _rating = oldReview.rating;

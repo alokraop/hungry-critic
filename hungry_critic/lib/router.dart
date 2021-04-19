@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:hungry_critic/blocs/account.dart';
-import 'package:hungry_critic/blocs/review.dart';
-import 'package:hungry_critic/models/restaurant.dart';
-import 'package:hungry_critic/shared/context.dart';
-import 'package:hungry_critic/shared/route_transitions.dart';
 
+import 'blocs/account.dart';
+import 'blocs/review.dart';
+import 'models/restaurant.dart';
+import 'routes/blocked.dart';
 import 'routes/home.dart';
 import 'routes/restaurants/restaurant_details.dart';
 import 'shared/config.dart';
+import 'shared/context.dart';
+import 'shared/route_transitions.dart';
 
 class MainRouter extends StatefulWidget {
   MainRouter({
@@ -47,7 +48,9 @@ class _MainRouterState extends State<MainRouter> {
     final routes = {
       '/': () => MaterialPageRoute(
             settings: s,
-            builder: (c) => HomeScreen(bloc: widget.bloc, onLogout: widget.onLogout),
+            builder: (c) => widget.bloc.isBlocked
+                ? BlockedScreen(onLogout: widget.onLogout)
+                : HomeScreen(bloc: widget.bloc, onLogout: widget.onLogout),
           ),
       '/restaurant': () => fadeIn(
             s,

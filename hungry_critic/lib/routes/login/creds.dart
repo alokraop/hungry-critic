@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,7 +49,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
   late Size _screen;
 
   var _status = AuthStatus.NONE;
-  bool _create = true;
+  bool _create = false;
 
   late Animation<double> _methods;
   late AnimationController _pass;
@@ -315,6 +316,8 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
           return _makeError('An account already exists. Try signing in!');
         case AuthStatus.ERROR:
           return _makeError('Something went wrong! Try again.');
+        case AuthStatus.BLOCKED:
+          return _makeError('This account has been blocked! Contact the admin!');
         default:
       }
     }
@@ -387,6 +390,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
     _method = method;
     switch (method) {
       case SignInMethod.GOOGLE:
+      case SignInMethod.FACEBOOK:
         if (exception is PlatformException && exception.code == 'SIGN_IN_CANCELED') {
           Aspects.instance.log('Login -> $method -> Canceled');
         }
@@ -396,13 +400,40 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
             case 400:
               if (_create) _status = AuthStatus.DUPLICATE;
               break;
+            case 412:
+              _status = AuthStatus.BLOCKED;
           }
         } else {
           Aspects.instance.recordError(exception);
           _status = AuthStatus.ERROR;
         }
         break;
-      default:
+      case SignInMethod.EMAIL:
+        if (exception is FirebaseAuthException) {
+          switch (exception.code) {
+            case 'wrong-password':
+              _status = AuthStatus.INCORRECT_CREDS;
+              break;
+            case 'too-many-requests':
+              _status = AuthStatus.BLOCKED;
+          }
+        } else if (exception is LoginException) {
+          Aspects.instance.log('Login -> $method -> Fail');
+          switch (exception.status) {
+            case 400:
+              if (_create) _status = AuthStatus.DUPLICATE;
+              break;
+            case 403:
+              if (!_create) _status = AuthStatus.INCORRECT_CREDS;
+              break;
+            case 412:
+              _status = AuthStatus.BLOCKED;
+          }
+        } else {
+          Aspects.instance.recordError(exception);
+          _status = AuthStatus.ERROR;
+        }
+        _passKey.currentState?.validate();
     }
     setState(() {});
   }
@@ -429,11 +460,16 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
 
   String? _validatePassword(String? value) {
     if (value?.isEmpty ?? true) return 'Password cannot be empty';
-    if (_status == AuthStatus.INCORRECT_CREDS) {
-      _status = AuthStatus.NONE;
-      return 'Incorrect password!';
+    final oldStatus = _status;
+    _status = AuthStatus.NONE;
+    switch (oldStatus) {
+      case AuthStatus.INCORRECT_CREDS:
+        return 'Incorrect password!';
+      case AuthStatus.BLOCKED:
+        return 'This account has been blocked! Contact admin!';
+      default:
+        return null;
     }
-    return null;
   }
 
   String? _validateConfirm(String? value) {

@@ -53,7 +53,6 @@ class AuthReceipt {
   AuthReceipt({
     required this.id,
     required this.token,
-    required this.fresh,
   });
 
   factory AuthReceipt.fromJson(Map<String, dynamic> json) => _$AuthReceiptFromJson(json);
@@ -61,18 +60,16 @@ class AuthReceipt {
   final String id;
 
   final String token;
-
-  final bool fresh;
 }
 
 @JsonSerializable()
 class Account {
   Account({
     required this.id,
-    required this.method,
     this.email,
     this.name,
     this.role = UserRole.USER,
+    required this.settings,
   });
 
   factory Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
@@ -84,9 +81,6 @@ class Account {
 
   final String id;
 
-  @JsonKey(toJson: _encodeMethod, fromJson: _decodeMethod)
-  final SignInMethod method;
-
   String? email;
 
   String? name;
@@ -96,6 +90,10 @@ class Account {
 
   @JsonKey(ignore: true)
   late String token;
+
+  Settings settings;
+
+  bool get initialized => settings.initialized || role == UserRole.ADMIN;
 
   Map<String, dynamic> toJson() => _$AccountToJson(this);
 
@@ -107,41 +105,18 @@ class Account {
   void update(Account account) {
     role = account.role;
     name = account.name ?? name;
+    settings = account.settings;
   }
 
-  Account copyWith({String? name, UserRole? role}) {
+  Account copyWith({String? name, UserRole? role, Settings? settings}) {
     return Account(
       id: id,
-      method: method,
       email: email,
       name: name ?? this.name,
       role: role ?? this.role,
+      settings: settings ?? this.settings,
     )..token = token;
   }
-}
-
-@JsonSerializable()
-class User extends Account {
-  User({
-    required String id,
-    required SignInMethod method,
-    String? email,
-    String? name,
-    UserRole role = UserRole.USER,
-    required this.settings,
-  }) : super(
-          id: id,
-          method: method,
-          email: email,
-          name: name,
-          role: role,
-        );
-
-  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
-
-  final Settings settings;
-
-  Map<String, dynamic> toJson() => _$UserToJson(this);
 }
 
 @JsonSerializable()
@@ -164,7 +139,23 @@ class Settings {
 
   factory Settings.fromJson(Map<String, dynamic> json) => _$SettingsFromJson(json);
 
+  bool operator ==(other) {
+    return other is Settings && initialized == other.initialized && blocked == other.blocked;
+  }
+
+  @override
+  int get hashCode => '$attempts $blocked $initialized'.hashCode;
+
   Map<String, dynamic> toJson() => _$SettingsToJson(this);
+
+  Settings copyWith({bool? blocked, bool? initialized}) {
+    return Settings(
+      attempts: this.attempts,
+      initialized: initialized ?? this.initialized,
+      method: this.method,
+      blocked: blocked ?? this.blocked,
+    );
+  }
 }
 
 enum AuthStatus {
@@ -175,5 +166,6 @@ enum AuthStatus {
   NO_ACCOUNT,
   UNVERIFIED,
   INCORRECT_CREDS,
+  BLOCKED,
   ERROR
 }

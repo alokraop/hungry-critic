@@ -9,7 +9,7 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../apis/account.dart';
 import '../apis/signIn.dart';
 import '../blocs/account.dart';
-import '../models/account.dart' show Account, SignInMethod, AuthStatus, EmailData, Credentials;
+import '../models/account.dart';
 import '../shared/aspects.dart';
 
 class SignInData {
@@ -135,18 +135,23 @@ class SignUpService {
     final receipt = await (info.create ? api.signUp(creds) : api.signIn(creds));
     _account = Account(
       id: receipt.id,
-      method: creds.method,
       email: info.email,
+      settings: Settings(
+        method: creds.method,
+        attempts: 0,
+        blocked: false,
+        initialized: false,
+      ),
     )..token = receipt.token;
 
     final aApi = AccountApi(bloc.config, receipt.token);
-    if (!receipt.fresh) {
+    if (!info.create) {
       final oldAccount = await aApi.fetchAccount(receipt.id);
       if (oldAccount == null) throw Exception('Couldn\t fetch account!');
       _account.update(oldAccount);
     }
     await bloc.save(_account);
-    return receipt.fresh ? AuthStatus.NEW_ACCOUNT : AuthStatus.EXISTING_ACCOUNT;
+    return _account.initialized ? AuthStatus.EXISTING_ACCOUNT : AuthStatus.NEW_ACCOUNT;
   }
 
   Future<AuthStatus> retryAuth() async {

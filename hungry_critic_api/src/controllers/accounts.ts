@@ -24,8 +24,18 @@ accountRouter.post('/', Validate(Account), async (req: Request, res: Response) =
   res.json(receipt);
 });
 
-accountRouter.put('/:id', Validate(Profile), async (req: Request, res: Response) => {
-  await service().update(req.params.id, req.body, res.locals.info);
+accountRouter.put('/:id/profile', Validate(Profile), async (req: Request, res: Response) => {
+  await service().updateProfile(req.params.id, req.body, res.locals.info);
+  res.send();
+});
+
+accountRouter.put('/:id/attempts', async (req: Request, res: Response) => {
+  await service().updateAttempts(req.params.id, res.locals.info);
+  res.send();
+});
+
+accountRouter.put('/:id', Validate(Account), async (req: Request, res: Response) => {
+  await service().updateAccount(req.params.id, req.body, res.locals.info);
   res.send();
 });
 

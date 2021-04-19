@@ -519,6 +519,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
               style: _theme.textTheme.bodyText2,
             ),
           ),
+        if (isAdmin()) _buildOptions(review),
         _buildReply(review),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7.5),
@@ -535,22 +536,29 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
   }
 
   _startDelete() {
+    _showDialog('This will delete the restaurant and all its reviews', _delete);
+  }
+
+  _showDialog(String content, Function() onConfirm) {
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('Are you sure?'),
         content: Text(
-          'This will delete the restaurant and all its reviews',
+          content,
           style: _theme.textTheme.bodyText1?.copyWith(fontWeight: FontWeight.w300),
         ),
         actions: [
           TextButton(
-            onPressed: () => _delete(),
-            child: Text('DELETE'),
+            onPressed: () {
+              Navigator.of(context).pop();
+              onConfirm();
+            },
+            child: Text('YES'),
           ),
           TextButton(
             onPressed: () => Navigator.of(c).pop(),
-            child: Text('CANCEL'),
+            child: Text('NO'),
           ),
         ],
       ),
@@ -571,8 +579,8 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-  _startReview() {
-    Navigator.of(context).push(CreateEntity(type: Entity.REVIEW));
+  _startReview([Review? review]) {
+    Navigator.of(context).push(CreateEntity(type: Entity.REVIEW, entity: review));
   }
 
   _buildReply(Review review) {
@@ -603,6 +611,8 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
         return true;
     }
   }
+
+  bool isAdmin() => _aBloc.account.role == UserRole.ADMIN;
 
   _buildRButton(Review review) {
     return Row(
@@ -657,27 +667,57 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
             ),
           ),
           if (canEditReply())
-            InkWell(
-              onTap: () => _startReply(review),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.edit, color: swatch, size: 18),
-                    SizedBox(width: 5),
-                    Text(
-                      'Edit',
-                      style: _theme.textTheme.bodyText2?.copyWith(
-                        color: swatch,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            Row(
+              children: [
+                _buildAction('Edit', Icons.edit, () => _startReply(review)),
+                if (isAdmin())
+                  Padding(
+                    padding: EdgeInsets.only(left: 15),
+                    child: _buildAction('Delete', Icons.delete, () => _deleteReply(review)),
+                  ),
+              ],
             ),
         ],
+      ),
+    );
+  }
+
+  _deleteReply(Review review) {
+    _showDialog(
+      'The reply cannot be restored',
+      () => _rBloc.deleteReply(review),
+    );
+  }
+
+  _buildOptions(Review review) {
+    return Row(
+      children: [
+        _buildAction('Edit', Icons.edit, () => _startReview(review)),
+        SizedBox(width: 15),
+        _buildAction('Delete', Icons.delete, () => {}),
+      ],
+    );
+  }
+
+  _buildAction(String label, IconData icon, Function() onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: swatch, size: 18),
+            SizedBox(width: 5),
+            Text(
+              label,
+              style: _theme.textTheme.bodyText2?.copyWith(
+                color: swatch,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

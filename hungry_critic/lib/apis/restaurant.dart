@@ -65,4 +65,9 @@ class RestaurantApi {
     final uri = url(review.restaurant, ['reviews', review.author, 'replies']);
     return http.put(uri, headers: headers, body: jsonEncode(fields));
   }
+
+  Future deleteReply(Review review) async {
+    final uri = url(review.restaurant, ['reviews', review.author, 'replies']);
+    return http.delete(uri, headers: headers);
+  }
 }
