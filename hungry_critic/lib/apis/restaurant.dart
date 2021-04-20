@@ -18,8 +18,9 @@ class RestaurantApi {
 
   final Map<String, String> headers;
 
-  Future<List<Restaurant>> findAll() async {
-    final response = await http.get(url(), headers: headers);
+  Future<List<Restaurant>> findAll([Map<String, dynamic>? query]) async {
+    final uri = url('', [], query);
+    final response = await http.get(uri, headers: headers);
     List rs = jsonDecode(response);
     return rs.map((r) => Restaurant.fromJson(r)).toList();
   }
@@ -37,8 +38,9 @@ class RestaurantApi {
     return http.put(url(restaurant.id), headers: headers, body: jsonEncode(restaurant));
   }
 
-  Future<List<Review>> findAllReviews(String rId) async {
-    final response = await http.get(url(rId, ['reviews']), headers: headers);
+  Future<List<Review>> findAllReviews(String rId, Map<String, dynamic>? query) async {
+    final uri = url(rId, ['reviews'], query);
+    final response = await http.get(uri, headers: headers);
     List rs = jsonDecode(response);
     return rs.map((r) => Review.fromJson(r)).toList();
   }

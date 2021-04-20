@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 
 import { Container } from 'typedi';
+import { PageInfo } from '../models/internal';
 import { Review, ReviewResponse } from '../models/review';
 import { RestaurantService } from '../services/restaurants';
 import { ReviewService } from '../services/reviews';
@@ -12,8 +13,8 @@ const service = () => Container.get(ReviewService);
 
 const rService = () => Container.get(RestaurantService);
 
-reviewRouter.get('/', async (_: Request, res: Response) => {
-  const reviews = await service().findAll(res.locals.rId);
+reviewRouter.get('/', async (req: Request, res: Response) => {
+  const reviews = await service().findAll(res.locals.rId, new PageInfo(req.query));
   res.json(reviews);
 });
 

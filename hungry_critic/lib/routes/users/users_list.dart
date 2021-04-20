@@ -21,6 +21,31 @@ class _UsersListState extends State<UsersList> {
 
   late ThemeData _theme;
 
+  final _controller = ScrollController();
+
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onScroll);
+  }
+
+  _onScroll() {
+    if (!_loading) {
+      final max = _controller.position.maxScrollExtent;
+      final scrolled = _controller.offset + _controller.position.extentInside;
+      final fraction = scrolled / max;
+      if (fraction > 0.6) _loadMore();
+    }
+  }
+
+  Future _loadMore() async {
+    _loading = true;
+    final hasMore = await _bloc.loadMore();
+    _loading = !hasMore;
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -65,6 +90,7 @@ class _UsersListState extends State<UsersList> {
   Widget _buildRecords(List<String> ids) {
     final us = ids.map(_bloc.find).whereType<Account>().toList();
     return ListView.builder(
+      controller: _controller,
       itemCount: us.length,
       itemBuilder: (context, index) {
         final user = us[index];

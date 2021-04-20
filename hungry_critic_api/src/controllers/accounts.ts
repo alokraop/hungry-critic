@@ -2,15 +2,18 @@ import { Router, Request, Response } from 'express';
 
 import { Container } from 'typedi';
 import { Account, Profile } from '../models/account';
+import { PageInfo } from '../models/internal';
 import { AccountService } from '../services/accounts';
+import { AuthService } from '../services/auth';
 import { Validate } from './middleware/validation';
 
 export const accountRouter: Router = Router();
 
 const service = () => Container.get(AccountService);
+const aService = () => Container.get(AuthService);
 
-accountRouter.get('/', async (_: Request, res: Response) => {
-  const account = await service().fetchAll(res.locals.info);
+accountRouter.get('/', async (req: Request, res: Response) => {
+  const account = await service().fetchAll(res.locals.info, new PageInfo(req.query));
   res.json(account);
 });
 
@@ -30,6 +33,6 @@ accountRouter.put('/:id', Validate(Account), async (req: Request, res: Response)
 });
 
 accountRouter.delete('/:id', async (req: Request, res: Response) => {
-  const token = await service().delete(req.params.id, res.locals.info);
+  const token = await aService().deleteAccount(req.params.id, res.locals.info);
   res.send({ token });
 });

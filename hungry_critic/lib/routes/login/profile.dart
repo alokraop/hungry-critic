@@ -22,19 +22,21 @@ class EditTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.topLeft,
-      children: [
-        EditProfile(
-          key: ValueKey('editProfileRoute'),
-          bloc: bloc,
-          onDone: onDone,
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          child: BackButton(onPressed: onCancel),
-        ),
-      ],
+    return SafeArea(
+      child: Stack(
+        alignment: Alignment.topLeft,
+        children: [
+          EditProfile(
+            key: ValueKey('editProfileRoute'),
+            bloc: bloc,
+            onDone: onDone,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: BackButton(onPressed: onCancel),
+          ),
+        ],
+      ),
     );
   }
 }

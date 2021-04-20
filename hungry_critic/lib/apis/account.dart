@@ -17,8 +17,9 @@ class AccountApi {
 
   final Map<String, String> headers;
 
-  Future<List<Account>> fetchAll() async {
-    final response = await http.get(url(), headers: headers);
+  Future<List<Account>> fetchAll(Map<String, dynamic>? query) async {
+    final uri = url('', [], query);
+    final response = await http.get(uri, headers: headers);
     List rs = jsonDecode(response);
     return rs.map((r) => Account.fromJson(r)..token = '').toList();
   }

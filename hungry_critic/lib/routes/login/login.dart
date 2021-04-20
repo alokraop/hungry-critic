@@ -82,7 +82,7 @@ class _LoginScreensState extends State<LoginScreens> {
 
   Future<void> initProfile(bool fresh) async {
     if (fresh) {
-      setState(() => _needsVerify = false);
+      if (_controller.page == 0) setState(() => _needsVerify = false);
       nextPage();
     } else {
       doLogin();

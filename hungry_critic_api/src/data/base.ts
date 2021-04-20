@@ -1,6 +1,7 @@
 import { ClassConstructor, classToPlain, plainToClass } from 'class-transformer';
 import config from 'config';
 import { Db, FilterQuery, MongoClient } from 'mongodb';
+import { PageInfo } from '../models/internal';
 
 let client: Promise<Db>;
 async function db(): Promise<Db> {
@@ -32,9 +33,13 @@ export class BaseDao<T extends Object> {
     return client.findOne(query, { projection });
   }
 
-  async findAll(query: FilterQuery<any>, projection: any = {}): Promise<T[]> {
+  async findAll(query: FilterQuery<any>, projection: any = {}, page?: PageInfo): Promise<T[]> {
     const client = await this.init();
-    return client.find(query, { projection }).toArray();
+    let cursor = client.find(query, { projection });
+    if (page) {
+      cursor = cursor.skip(page.offset).limit(page.limit);
+    }
+    return cursor.toArray();
   }
 
   async save(document: T): Promise<any> {

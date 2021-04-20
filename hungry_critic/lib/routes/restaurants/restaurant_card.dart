@@ -23,21 +23,21 @@ class _RestaurantCardState extends State<RestaurantCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
-      onTap: () => widget.onTap?.call(widget.restaurant),
-      child: Container(
-        margin: EdgeInsets.only(left: 12.5, right: 12.5, bottom: 20),
-        decoration: BoxDecoration(
-          color: greySwatch[50],
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: greySwatch[800].withOpacity(0.4),
-              blurRadius: 5,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
+    return Container(
+      margin: EdgeInsets.only(left: 12.5, right: 12.5, bottom: 20),
+      decoration: BoxDecoration(
+        color: greySwatch[50],
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: greySwatch[800].withOpacity(0.4),
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => widget.onTap?.call(widget.restaurant),
         child: _buildCard(theme),
       ),
     );

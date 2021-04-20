@@ -21,6 +21,8 @@ export class Credentials {
 }
 
 export class Settings {
+  providerId: string;
+
   hashedPassword: HashResult;
 
   @Allow()
@@ -33,12 +35,13 @@ export class Settings {
 
   method: SignInMethod;
 
-  constructor(password: HashResult, method: SignInMethod) {
+  constructor(password: HashResult, creds: Credentials) {
+    this.providerId = creds.identifier;
     this.hashedPassword = password;
     this.blocked = false;
     this.attempts = 0;
     this.initialized = false;
-    this.method = method;
+    this.method = creds.method;
   }
 }
 

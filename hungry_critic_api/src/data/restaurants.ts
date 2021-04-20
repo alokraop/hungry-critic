@@ -1,5 +1,6 @@
 import { Cursor } from 'mongodb';
 import { Service } from 'typedi';
+import { PageInfo } from '../models/internal';
 import { RestaurantDetails } from '../models/restaurant';
 import { BaseDao } from './base';
 
@@ -13,8 +14,9 @@ export class RestaurantDao extends BaseDao<RestaurantDetails> {
     query: any = {},
     on: any = {},
     projection: any = {},
+    page: PageInfo,
   ): Promise<Cursor<RestaurantDetails>> {
     const client = await this.init();
-    return client.find(query, { projection }).sort(on);
+    return client.find(query, { projection }).sort(on).skip(page.offset).limit(page.limit);
   }
 }

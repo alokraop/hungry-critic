@@ -5,6 +5,8 @@ import '../models/restaurant.dart';
 import '../models/review.dart';
 import 'account.dart';
 
+const limit = 10;
+
 class RestaurantBloc {
   RestaurantBloc(this.aBloc) : api = RestaurantApi(aBloc.config, aBloc.token);
 
@@ -20,11 +22,26 @@ class RestaurantBloc {
 
   Stream<List<String>> get restaurants => _rSubject.stream;
 
-  Future init() async {
-    final rs = await api.findAll();
+  Future init() {
+    _restaurants = [];
+    return _load();
+  }
+
+  Future<int> _load([Map<String, dynamic>? query]) async {
+    final rs = await api.findAll(query);
     rs.forEach((r) => _rMap[r.id] = r);
-    _restaurants = rs.map((r) => r.id).toList();
+    _restaurants.addAll(rs.map((r) => r.id).toList());
     _publish();
+    return rs.length;
+  }
+
+  Future<bool> loadMore() async {
+    final query = {
+      'offset': _restaurants.length.toString(),
+      'limit': limit.toString(),
+    };
+    final length = await _load(query);
+    return length == limit;
   }
 
   Restaurant? find(String id) => _rMap[id];

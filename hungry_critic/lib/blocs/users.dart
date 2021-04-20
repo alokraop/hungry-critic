@@ -22,11 +22,28 @@ class UserBloc {
 
   Stream<List<String>> get users => _uSubject.stream;
 
-  Future init() async {
-    final us = await api.fetchAll();
+  Future init() {
+    _users = [];
+    return _load();
+  }
+
+  Future<int> _load([Map<String, dynamic>? query]) async {
+    final us = await api.fetchAll(query);
     us.forEach((u) => _uMap[u.id] = u);
-    _users = us.where((u) => u.id != aBloc.account.id).map((u) => u.id).toList();
+    _users.addAll(
+      us.where((u) => u.id != aBloc.account.id).map((u) => u.id).toList(),
+    );
     _publish();
+    return us.length;
+  }
+
+  Future<bool> loadMore() async {
+    final query = {
+      'offset': _users.length.toString(),
+      'limit': limit.toString(),
+    };
+    final length = await _load(query);
+    return length == limit;
   }
 
   Account? find(String id) => _uMap[id];

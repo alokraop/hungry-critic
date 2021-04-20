@@ -5,7 +5,7 @@ import { FilterCriteria, Restaurant, RestaurantDetails } from '../models/restaur
 
 import { v4 as uuid } from 'uuid';
 import { APIError } from '../controllers/middleware/error';
-import { TokenInfo } from '../models/internal';
+import { PageInfo, TokenInfo } from '../models/internal';
 import { Review, ReviewResponse } from '../models/review';
 import { ReviewService } from './reviews';
 
@@ -19,15 +19,19 @@ export class RestaurantService {
     return restaurant;
   }
 
-  async findAll(criteria: FilterCriteria, caller: TokenInfo): Promise<RestaurantDetails[]> {
+  async findAll(
+    criteria: FilterCriteria,
+    page: PageInfo,
+    caller: TokenInfo,
+  ): Promise<RestaurantDetails[]> {
     switch (caller.role) {
       case UserRole.CUSTOMER:
-        const cursor = await this.dao.findSorted(criteria, { averageRating: 1 }, { _id: 0 });
+        const cursor = await this.dao.findSorted(criteria, { averageRating: 1 }, { _id: 0 }, page);
         return cursor.toArray();
       case UserRole.OWNER:
-        return this.dao.findAll({ owner: caller.id, ...criteria });
+        return this.dao.findAll({ owner: caller.id, ...criteria }, {}, page);
       case UserRole.ADMIN:
-        return this.dao.findAll(criteria);
+        return this.dao.findAll(criteria, {}, page);
     }
   }
 

@@ -31,12 +31,36 @@ class _RestaurantListState extends State<RestaurantList> {
 
   bool _filtering = false;
 
+  bool _loading = false;
+  final _controller = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onScroll);
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _theme = Theme.of(context);
     _bloc = BlocsContainer.of(context).rBloc;
     _aBloc = BlocsContainer.of(context).aBloc;
+  }
+
+  _onScroll() {
+    if (!_loading) {
+      final max = _controller.position.maxScrollExtent;
+      final scrolled = _controller.offset + _controller.position.extentInside;
+      final fraction = scrolled / max;
+      if (fraction > 0.6) _loadMore();
+    }
+  }
+
+  Future _loadMore() async {
+    _loading = true;
+    final hasMore = await _bloc.loadMore();
+    _loading = !hasMore;
   }
 
   @override
@@ -64,7 +88,7 @@ class _RestaurantListState extends State<RestaurantList> {
       children: [
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(left: 12.5),
+            padding: const EdgeInsets.only(left: 12.5, bottom: 5, top: 5),
             child: Text(
               'Restaurants',
               style: _theme.textTheme.headline5?.copyWith(
@@ -176,6 +200,7 @@ class _RestaurantListState extends State<RestaurantList> {
         .where((r) => r.averageRating >= minRating && r.averageRating <= maxRating)
         .toList();
     return ListView.builder(
+      controller: _controller,
       itemCount: rs.length,
       itemBuilder: (context, index) {
         final restaurant = rs[index];

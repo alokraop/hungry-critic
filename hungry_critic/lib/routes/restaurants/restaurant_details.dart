@@ -41,6 +41,31 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
 
   bool _highlights = true;
 
+  final _controller = ScrollController();
+
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onScroll);
+  }
+
+  _onScroll() {
+    if (!_loading) {
+      final max = _controller.position.maxScrollExtent;
+      final scrolled = _controller.offset + _controller.position.extentInside;
+      final fraction = scrolled / max;
+      if (fraction > 0.6) _loadMore();
+    }
+  }
+
+  Future _loadMore() async {
+    _loading = true;
+    final hasMore = await _bloc.loadMore();
+    _loading = !hasMore;
+  }
+
   bool get canModify {
     final account = _aBloc.account;
     switch (account.role) {
@@ -388,6 +413,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
             final data = snapshot.data;
             if (data == null) return Container();
             return ListView(
+              controller: _controller,
               padding: EdgeInsets.symmetric(horizontal: 32.5),
               children: [
                 SizedBox(height: 20),
@@ -512,7 +538,8 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
           ],
         ),
         if (content != null)
-          Padding(
+          Container(
+            alignment: Alignment.centerLeft,
             padding: const EdgeInsets.only(top: 10),
             child: Text(
               content,

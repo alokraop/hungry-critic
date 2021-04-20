@@ -27,13 +27,30 @@ class ReviewBloc {
 
   Review? find(String id) => _rMap[id];
 
-  Future push(Restaurant restaurant) async {
+  Future push(Restaurant restaurant) {
     _restaurant = restaurant;
-    final rs = await api.findAllReviews(restaurant.id);
+    _reviews = [];
+    return _load(restaurant);
+  }
+
+  Future<int> _load(Restaurant restaurant, [Map<String, dynamic>? query]) async {
+    final rs = await api.findAllReviews(restaurant.id, query);
     rs.forEach((r) => _rMap[r.author] = r);
     rs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    _reviews = rs.map((r) => r.author).toList();
+    _reviews.addAll(rs.map((r) => r.author).toList());
     _publish();
+    return rs.length;
+  }
+
+  Future<bool> loadMore() async {
+    final restaurant = _restaurant;
+    if (restaurant == null) return false;
+    final query = {
+      'offset': _reviews.length.toString(),
+      'limit': limit.toString(),
+    };
+    final length = await _load(restaurant, query);
+    return length == limit;
   }
 
   pop() {

@@ -9,3 +9,14 @@ export interface TokenInfo {
 
   role: UserRole;
 }
+
+export class PageInfo {
+  offset: number;
+
+  limit: number;
+
+  constructor(params?: any) {
+    this.offset = parseInt(params?.['offset']) ?? 0;
+    this.limit = parseInt(params?.['limit']) ?? 10;
+  }
+}

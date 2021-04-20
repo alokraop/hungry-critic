@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 
 import { Container } from 'typedi';
+import { PageInfo } from '../models/internal';
 import { FilterCriteria, Restaurant } from '../models/restaurant';
 import { RestaurantService } from '../services/restaurants';
 import { Validate } from './middleware/validation';
@@ -11,8 +12,11 @@ export const restaurantRouter: Router = Router();
 const service = () => Container.get(RestaurantService);
 
 restaurantRouter.get('/', async (req: Request, res: Response) => {
-  const criteria = new FilterCriteria(req.query);
-  const restaurants = await service().findAll(criteria, res.locals.info);
+  const restaurants = await service().findAll(
+    new FilterCriteria(req.query),
+    new PageInfo(req.query),
+    res.locals.info,
+  );
   res.json(restaurants);
 });
 

@@ -2,6 +2,7 @@ import { MongoError } from 'mongodb';
 import { Service } from 'typedi';
 import { APIError } from '../controllers/middleware/error';
 import { ReviewsDao } from '../data/reviews';
+import { PageInfo } from '../models/internal';
 import { Review, ReviewResponse } from '../models/review';
 
 @Service()
@@ -26,8 +27,8 @@ export class ReviewService {
     return results.length === 0 ? undefined : results[0];
   }
 
-  async findAll(id: string): Promise<Review[]> {
-    return this.dao.findAll({ restaurant: id });
+  async findAll(id: string, page: PageInfo): Promise<Review[]> {
+    return this.dao.findAll({ restaurant: id }, {}, page);
   }
 
   async create(review: Review): Promise<any> {

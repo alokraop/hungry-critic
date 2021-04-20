@@ -41,8 +41,12 @@ class AccountBloc {
   }
 
   Future initProfile(Account changes) async {
+    if (changes.role != UserRole.ADMIN) {
+      changes = changes.copyWith(
+        settings: changes.settings.copyWith(initialized: true),
+      );
+    }
     account.update(changes);
-
     final receipt = await _api.initProfile(account);
     account.token = receipt.token;
 

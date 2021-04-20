@@ -39,6 +39,16 @@ export class AuthService {
     return this.verifyCreds(account, creds);
   }
 
+  
+  async deleteAccount(id: string, caller: TokenInfo): Promise<any> {
+    if (caller.role != UserRole.ADMIN) {
+      throw new APIError("You don't have privilidges to delete this account!");
+    }
+
+    const account = await this.service.delete(id);
+    return this.dao.deleteRecord(account.settings);
+  }
+
   private async createAccount(id: string, creds: Credentials): Promise<any> {
     this.logger.debug('Creating new account', { accountId: id });
     const success = await this.verify(creds);
@@ -47,7 +57,7 @@ export class AuthService {
     const account = <Account>{
       id,
       role: UserRole.CUSTOMER,
-      settings: new Settings(hashedPassword, creds.method),
+      settings: new Settings(hashedPassword, creds),
     };
     await this.service.create(account);
     return this.makeReceipt(account);
