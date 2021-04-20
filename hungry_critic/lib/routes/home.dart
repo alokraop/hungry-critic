@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hungry_critic/routes/reviews/reviews_list.dart';
 
 import '../blocs/account.dart';
 import '../flaps/creation_flap.dart';
@@ -85,9 +86,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> _populatePages(UserRole role) {
     final showUsers = role == UserRole.ADMIN;
+    final showReviews = role == UserRole.OWNER;
     return [
       RestaurantList(onUpdate: _createRestaurant),
       if (showUsers) UsersList(onUpdate: _openUser),
+      if(showReviews) ReviewsList(),
       ProfilePage(onLogout: widget.onLogout),
     ];
   }
@@ -103,6 +106,11 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: Icon(Icons.supervised_user_circle),
           label: 'Users',
         ),
+      if (role == UserRole.OWNER)
+        BottomNavigationBarItem(
+          icon: Icon(Icons.rate_review),
+          label: 'Reviews',
+        ),
       BottomNavigationBarItem(
         icon: Icon(Icons.person),
         label: 'Me',
@@ -112,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   _findButton(UserRole role) {
     if (role != UserRole.OWNER) return null;
-    if(_selectedIndex != 0) return null;
+    if (_selectedIndex != 0) return null;
     return _buildButton('RESTAURANT', Icons.add, () => _createRestaurant());
   }
 

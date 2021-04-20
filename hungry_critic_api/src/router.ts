@@ -7,6 +7,7 @@ import { HandleErrors } from './controllers/middleware/error';
 import { Authenticate } from './controllers/middleware/auth';
 import { LoggingService } from './services/logging';
 import { restaurantRouter } from './controllers/restaurants';
+import { reviewRouter } from './controllers/pending_reviews';
 
 export function setupRoutes(webServer: Express) {
   const logger = Container.get(LoggingService);
@@ -18,5 +19,6 @@ export function setupRoutes(webServer: Express) {
   webServer.use('/auth', authRouter);
   webServer.use('/accounts', Authenticate, accountRouter);
   webServer.use('/restaurants', Authenticate, restaurantRouter);
+  webServer.use('/reviews', Authenticate, reviewRouter);
   webServer.use(HandleErrors);
 }

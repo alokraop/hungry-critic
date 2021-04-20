@@ -24,15 +24,21 @@ export class RestaurantService {
     page: PageInfo,
     caller: TokenInfo,
   ): Promise<RestaurantDetails[]> {
+    let cursor;
     switch (caller.role) {
       case UserRole.CUSTOMER:
-        const cursor = await this.dao.findSorted(criteria, { averageRating: 1 }, { _id: 0 }, page);
-        return cursor.toArray();
+        cursor = await this.dao.findSorted(criteria, { averageRating: -1 }, { _id: 0 }, page);
       case UserRole.OWNER:
-        return this.dao.findAll({ owner: caller.id, ...criteria }, {}, page);
+        cursor = await this.dao.findSorted(
+          { owner: caller.id, ...criteria },
+          { averageRating: -1 },
+          { _id: 0 },
+          page,
+        );
       case UserRole.ADMIN:
-        return this.dao.findAll(criteria, {}, page);
+        cursor = await this.dao.findSorted(criteria, { averageRating: -1 }, { _id: 0 }, page);
     }
+    return cursor.toArray();
   }
 
   async create(spec: Restaurant, caller: TokenInfo): Promise<Restaurant> {
@@ -66,6 +72,14 @@ export class RestaurantService {
       throw new APIError("You don't have priviledges to delete this restaurant!", 403);
     }
     return Promise.all([this.dao.delete({ id }), this.rService.deleteAll(id)]);
+  }
+
+  async findReviews(page: PageInfo, caller: TokenInfo): Promise<any> {
+    if(caller.role !== UserRole.OWNER) {
+      throw new APIError("You don't have the priviledges to call this endpoint", 403);
+    }
+    const restaurants = await this.dao.findAll({ owner: caller.id });
+    return this.rService.findPending(restaurants.map(r => r.id), page);
   }
 
   async addReview(id: string, review: Review, caller: TokenInfo): Promise<any> {

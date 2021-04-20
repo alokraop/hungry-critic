@@ -71,7 +71,7 @@ class _ReplyFormState extends EntityCreator<ReplyForm> {
               child: _buildRating(),
             ),
             SizedBox(height: 20),
-            Text(review.review ?? '', style: _theme.textTheme.bodyText1),
+            Text(review.review, style: _theme.textTheme.bodyText1),
             SizedBox(height: 20),
             TextFormField(
               controller: _replyC,
@@ -86,6 +86,7 @@ class _ReplyFormState extends EntityCreator<ReplyForm> {
               ),
               maxLines: null,
               minLines: 2,
+              validator: _validateReply,
             ),
             SizedBox(height: 20),
           ],
@@ -131,25 +132,23 @@ class _ReplyFormState extends EntityCreator<ReplyForm> {
   Widget _buildSlice(int index, double width) {
     final rating = widget.review.rating;
     final iLimit = rating * 2;
-    return InkWell(
-      onTap: () => _selectSlice(index),
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 2),
-        width: width,
-        height: 20,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.horizontal(
-            left: index == 0 ? Radius.circular(7.5) : Radius.zero,
-            right: index == 9 ? Radius.circular(7.5) : Radius.zero,
-          ),
-          color: index < iLimit ? findColor(rating) : greySwatch[300],
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 2),
+      width: width,
+      height: 20,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.horizontal(
+          left: index == 0 ? Radius.circular(7.5) : Radius.zero,
+          right: index == 9 ? Radius.circular(7.5) : Radius.zero,
         ),
+        color: index < iLimit ? findColor(rating) : greySwatch[300],
       ),
     );
   }
 
-  _selectSlice(int index) {
-    setState(() => _rating = (index / 2) + 0.5);
+  String? _validateReply(String? replay) {
+    if (replay?.isEmpty ?? true) return 'You need to give a reply';
+    return null;
   }
 
   @override

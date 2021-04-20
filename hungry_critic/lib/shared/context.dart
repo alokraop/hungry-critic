@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:hungry_critic/blocs/pending_review.dart';
 import 'package:hungry_critic/blocs/review.dart';
 import 'package:hungry_critic/blocs/users.dart';
 
@@ -9,6 +10,7 @@ class BlocsContainer extends InheritedWidget {
   final AccountBloc aBloc;
   final RestaurantBloc rBloc;
   final ReviewBloc reBloc;
+  final PendingReviewBloc pBloc;
   final UserBloc uBloc;
   final Widget child;
 
@@ -18,6 +20,7 @@ class BlocsContainer extends InheritedWidget {
     required this.rBloc,
     required this.uBloc,
     required this.reBloc,
+    required this.pBloc,
     required this.child,
   }) : super(key: key, child: child);
 

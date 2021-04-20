@@ -176,4 +176,17 @@ class SignUpService {
   dispose() {
     _sub?.cancel();
   }
+
+  signOut() async {
+    final account = bloc.account;
+    await _auth.signOut();
+    switch (account.settings.method) {
+      case SignInMethod.GOOGLE:
+        final gAuth = GoogleSignIn();
+        return gAuth.signOut();
+      case SignInMethod.FACEBOOK:
+        return FacebookAuth.instance.logOut();
+      default:
+    }
+  }
 }

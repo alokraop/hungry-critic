@@ -104,6 +104,7 @@ class _RestaurantFormState extends EntityCreator<RestaurantForm> {
               controller: _nameC,
               style: _theme.textTheme.bodyText1,
               padding: EdgeInsets.symmetric(horizontal: 15, vertical: 7.5),
+              validator: _validateName,
             ),
             SizedBox(height: 20),
             UnderlinedTextField(
@@ -149,6 +150,11 @@ class _RestaurantFormState extends EntityCreator<RestaurantForm> {
         ),
       ),
     );
+  }
+
+  String? _validateName(String? name) {
+    if (name?.isEmpty ?? true) return 'You need to give a name';
+    return null;
   }
 
   Widget _buildCuisine(String cuisine) {

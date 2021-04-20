@@ -48,7 +48,7 @@ class RestaurantBloc {
 
   Future createNew(Restaurant r) async {
     final restaurant = await api.createNew(r);
-    _restaurants.insert(0, restaurant.id);
+    _restaurants.add(restaurant.id);
     _rMap[restaurant.id] = restaurant;
     _publish();
   }

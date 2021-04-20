@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'restaurant.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class Restaurant {
   Restaurant({
     required this.id,

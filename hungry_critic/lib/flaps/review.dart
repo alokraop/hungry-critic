@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../blocs/account.dart';
 import '../blocs/review.dart';
@@ -27,8 +28,9 @@ class _ReviewFormState extends EntityCreator<ReviewForm> {
   late AccountBloc _aBloc;
   late ReviewBloc _rBloc;
 
-  double _rating = 0;
+  double _rating = 5;
   final _reviewC = TextEditingController();
+  DateTime _date = DateTime.now();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -48,7 +50,8 @@ class _ReviewFormState extends EntityCreator<ReviewForm> {
     if (oldReview != null) {
       _existing = oldReview;
       _rating = oldReview.rating;
-      _reviewC.text = oldReview.review ?? '';
+      _reviewC.text = oldReview.review;
+      _date = oldReview.dateOfVisit;
     }
   }
 
@@ -86,6 +89,15 @@ class _ReviewFormState extends EntityCreator<ReviewForm> {
               ),
               maxLines: null,
               minLines: 5,
+              validator: _validateReview,
+            ),
+            SizedBox(height: 12.5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('DATE OF VISIT', style: _theme.textTheme.bodyText2),
+                _buildDate(_date, (d) => setState(() => _date = d)),
+              ],
             ),
             SizedBox(height: 20),
           ],
@@ -151,6 +163,50 @@ class _ReviewFormState extends EntityCreator<ReviewForm> {
     setState(() => _rating = (index / 2) + 0.5);
   }
 
+  Widget _buildDate(DateTime date, Function onTap) {
+    final label = DateFormat.yMd().format(date);
+    changeDate() async {
+      final newDate = await showDatePicker(
+        context: context,
+        initialDate: date,
+        firstDate: DateTime(2019),
+        lastDate: DateTime.now(),
+      );
+      if (newDate != null) onTap(newDate);
+    }
+
+    return InkWell(
+      onTap: changeDate,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.5, vertical: 5),
+        decoration: BoxDecoration(
+          color: swatch[300],
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: _theme.textTheme.subtitle1?.copyWith(color: greySwatch[50]),
+            ),
+            SizedBox(width: 5),
+            Icon(
+              Icons.edit,
+              color: greySwatch[50],
+              size: 17.5,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _validateReview(String? review) {
+    if (review?.isEmpty ?? true) return 'You need to add a review';
+    return null;
+  }
+
   @override
   FutureOr<SubmitStatus> submit() {
     final valid = _formKey.currentState?.validate() ?? false;
@@ -162,6 +218,7 @@ class _ReviewFormState extends EntityCreator<ReviewForm> {
         authorName: _aBloc.account.name ?? 'Unknown',
         rating: _rating,
         review: _reviewC.text,
+        dateOfVisit: _date,
       );
       return _rBloc
           .createNew(review)
@@ -173,6 +230,7 @@ class _ReviewFormState extends EntityCreator<ReviewForm> {
         authorName: oldReview.authorName,
         rating: _rating,
         review: _reviewC.text,
+        dateOfVisit: _date,
       )..restaurant = oldReview.restaurant;
       return _rBloc
           .update(review)

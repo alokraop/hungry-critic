@@ -468,7 +468,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
     _status = AuthStatus.NONE;
     switch (oldStatus) {
       case AuthStatus.INCORRECT_CREDS:
-        return 'Incorrect password!';
+        return 'Incorrect password/ login method!';
       case AuthStatus.BLOCKED:
         return 'This account has been blocked! Contact admin!';
       case AuthStatus.DUPLICATE:

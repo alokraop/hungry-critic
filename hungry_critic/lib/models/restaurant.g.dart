@@ -26,16 +26,25 @@ Restaurant _$RestaurantFromJson(Map<String, dynamic> json) {
         : Review.fromJson(json['worstReview'] as Map<String, dynamic>);
 }
 
-Map<String, dynamic> _$RestaurantToJson(Restaurant instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'owner': instance.owner,
-      'name': instance.name,
-      'address': instance.address,
-      'cuisines': instance.cuisines,
-      'averageRating': instance.averageRating,
-      'totalRatings': instance.totalRatings,
-      'totalReviews': instance.totalReviews,
-      'bestReview': instance.bestReview,
-      'worstReview': instance.worstReview,
-    };
+Map<String, dynamic> _$RestaurantToJson(Restaurant instance) {
+  final val = <String, dynamic>{
+    'id': instance.id,
+    'owner': instance.owner,
+    'name': instance.name,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('address', instance.address);
+  val['cuisines'] = instance.cuisines;
+  val['averageRating'] = instance.averageRating;
+  val['totalRatings'] = instance.totalRatings;
+  val['totalReviews'] = instance.totalReviews;
+  writeNotNull('bestReview', instance.bestReview);
+  writeNotNull('worstReview', instance.worstReview);
+  return val;
+}

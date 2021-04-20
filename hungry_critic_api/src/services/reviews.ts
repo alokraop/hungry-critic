@@ -2,7 +2,8 @@ import { MongoError } from 'mongodb';
 import { Service } from 'typedi';
 import { APIError } from '../controllers/middleware/error';
 import { ReviewsDao } from '../data/reviews';
-import { PageInfo } from '../models/internal';
+import { UserRole } from '../models/account';
+import { PageInfo, TokenInfo } from '../models/internal';
 import { Review, ReviewResponse } from '../models/review';
 
 @Service()
@@ -25,6 +26,10 @@ export class ReviewService {
     const cursor = await this.dao.findSorted({ restaurant: id }, { rating: 1 });
     const results = await cursor.limit(1).toArray();
     return results.length === 0 ? undefined : results[0];
+  }
+
+  async findPending(ids: Array<string>, page: PageInfo): Promise<Review[]> {
+    return this.dao.findAll({ restaurant: { $in: ids }, reply: { $exists: false } }, {}, page);
   }
 
   async findAll(id: string, page: PageInfo): Promise<Review[]> {

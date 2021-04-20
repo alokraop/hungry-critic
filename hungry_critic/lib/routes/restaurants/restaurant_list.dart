@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:hungry_critic/blocs/account.dart';
-import 'package:hungry_critic/models/account.dart';
-import 'package:hungry_critic/shared/star_selection.dart';
 
 import '../../blocs/restaurant.dart';
 import '../../models/restaurant.dart';
 import '../../shared/colors.dart';
 import '../../shared/context.dart';
+import '../../shared/star_selection.dart';
 import 'restaurant_card.dart';
 
 const options = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0];
@@ -24,7 +22,6 @@ class _RestaurantListState extends State<RestaurantList> {
   late ThemeData _theme;
 
   late RestaurantBloc _bloc;
-  late AccountBloc _aBloc;
 
   double minRating = 0;
   double maxRating = 5;
@@ -45,7 +42,6 @@ class _RestaurantListState extends State<RestaurantList> {
     super.didChangeDependencies();
     _theme = Theme.of(context);
     _bloc = BlocsContainer.of(context).rBloc;
-    _aBloc = BlocsContainer.of(context).aBloc;
   }
 
   _onScroll() {
@@ -171,19 +167,17 @@ class _RestaurantListState extends State<RestaurantList> {
   }
 
   _buildActions() {
-    return _aBloc.account.role == UserRole.OWNER
-        ? Container()
-        : InkWell(
-            onTap: _toggleFilter,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.5, vertical: 12.5),
-              child: Icon(
-                _filtering ? Icons.filter_alt : Icons.filter_alt_outlined,
-                color: _filtering ? swatch : greySwatch[400],
-                size: 30,
-              ),
-            ),
-          );
+    return InkWell(
+      onTap: _toggleFilter,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.5, vertical: 12.5),
+        child: Icon(
+          _filtering ? Icons.filter_alt : Icons.filter_alt_outlined,
+          color: _filtering ? swatch : greySwatch[400],
+          size: 30,
+        ),
+      ),
+    );
   }
 
   _toggleFilter() {

@@ -51,11 +51,16 @@ export class AccountService {
   }
 
   async updateAccount(id: string, account: Account, caller: TokenInfo): Promise<string> {
-    if (caller.role !== UserRole.ADMIN) {
+    const self = caller.id === account.id;
+    if (!self && caller.role !== UserRole.ADMIN) {
       throw new APIError("You don't have priviledges to modify this account!");
     }
     const { settings, ...fields } = account;
-    return this.dao.update({ id }, { ...fields, ...this.flatten(settings) });
+    if (self) {
+      return this.dao.update({ id }, fields);
+    } else {
+      return this.dao.update({ id }, { ...fields, ...this.flatten(settings) });
+    }
   }
 
   async markFail(account: Account): Promise<any> {

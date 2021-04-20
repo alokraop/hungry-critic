@@ -5,13 +5,14 @@ part 'review.g.dart';
 _fromDate(DateTime time) => time.millisecondsSinceEpoch;
 _toDate(int millis) => DateTime.fromMillisecondsSinceEpoch(millis);
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class Review {
   Review({
     required this.author,
     required this.authorName,
     required this.rating,
-    this.review,
+    required this.review,
+    required this.dateOfVisit,
     this.reply,
     DateTime? timestamp,
   }) {
@@ -28,7 +29,10 @@ class Review {
 
   final double rating;
 
-  final String? review;
+  final String review;
+
+  @JsonKey(toJson: _fromDate, fromJson: _toDate)
+  final DateTime dateOfVisit;
 
   String? reply;
 

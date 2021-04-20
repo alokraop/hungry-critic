@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'blocs/account.dart';
+import 'blocs/pending_review.dart';
 import 'blocs/restaurant.dart';
 import 'blocs/review.dart';
 import 'blocs/users.dart';
 import 'models/account.dart';
 import 'router.dart';
 import 'routes/login/login.dart';
+import 'services/sign_in.dart';
 import 'shared/aspects.dart';
 import 'shared/colors.dart';
 import 'shared/config.dart';
@@ -85,6 +87,8 @@ class _HungryCriticState extends State<HungryCritic> {
 
   late UserBloc _uBloc;
 
+  late PendingReviewBloc _pBloc;
+
   @override
   void initState() {
     super.initState();
@@ -126,7 +130,9 @@ class _HungryCriticState extends State<HungryCritic> {
     setState(() => _loggedIn = true);
   }
 
-  _onLogout() {
+  _onLogout() async {
+    final service = SignUpService(_self);
+    await service.signOut();
     setState(() => _loggedIn = false);
   }
 
@@ -136,6 +142,7 @@ class _HungryCriticState extends State<HungryCritic> {
       rBloc: _rBloc,
       uBloc: _uBloc,
       reBloc: _reBloc,
+      pBloc: _pBloc,
       child: MainRouter(
         theme: theme,
         bloc: _self,
@@ -152,6 +159,10 @@ class _HungryCriticState extends State<HungryCritic> {
     _uBloc = UserBloc(_self, _rBloc);
     if (_self.account.role == UserRole.ADMIN) {
       _uBloc.init();
+    }
+    _pBloc = PendingReviewBloc(_self, _rBloc);
+    if (_self.account.role == UserRole.OWNER) {
+      _pBloc.init();
     }
   }
 }

@@ -78,7 +78,9 @@ class _UserFormState extends EntityCreator<UserForm> {
                   borderRadius: BorderRadius.circular(7.5),
                   borderSide: BorderSide(width: 1.5, color: greySwatch[300]),
                 ),
+                
               ),
+              validator: _validateName,
             ),
             if (!self) _buildOptions(),
             SizedBox(height: 15),
@@ -160,6 +162,11 @@ class _UserFormState extends EntityCreator<UserForm> {
         ),
       ),
     );
+  }
+
+  String? _validateName(String? name) {
+    if (name?.isEmpty ?? true) return 'You need to give a name';
+    return null;
   }
 
   @override

@@ -14,8 +14,12 @@ export class Review {
   @IsPositive()
   rating: number;
 
-  @Allow()
+  @IsDefined()
   review: string;
+
+  @IsDefined()
+  @IsPositive()
+  dateOfVisit: number;
 
   reply?: string;
 

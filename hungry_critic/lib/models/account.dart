@@ -32,7 +32,7 @@ _decodeRole(int? index) {
   );
 }
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class Credentials {
   @JsonKey(toJson: _encodeMethod, fromJson: _decodeMethod)
   final SignInMethod method;
@@ -48,7 +48,7 @@ class Credentials {
   Map<String, dynamic> toJson() => _$CredentialsToJson(this);
 }
 
-@JsonSerializable(createToJson: false)
+@JsonSerializable(createToJson: false, includeIfNull: false)
 class AuthReceipt {
   AuthReceipt({
     required this.id,
@@ -62,7 +62,7 @@ class AuthReceipt {
   final String token;
 }
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class Account {
   Account({
     required this.id,
@@ -119,7 +119,7 @@ class Account {
   }
 }
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class Settings {
   Settings({
     required this.blocked,

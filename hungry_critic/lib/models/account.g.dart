@@ -14,12 +14,20 @@ Credentials _$CredentialsFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$CredentialsToJson(Credentials instance) =>
-    <String, dynamic>{
-      'method': _encodeMethod(instance.method),
-      'identifier': instance.identifier,
-      'firebaseId': instance.firebaseId,
-    };
+Map<String, dynamic> _$CredentialsToJson(Credentials instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('method', _encodeMethod(instance.method));
+  val['identifier'] = instance.identifier;
+  val['firebaseId'] = instance.firebaseId;
+  return val;
+}
 
 AuthReceipt _$AuthReceiptFromJson(Map<String, dynamic> json) {
   return AuthReceipt(
@@ -38,13 +46,23 @@ Account _$AccountFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$AccountToJson(Account instance) => <String, dynamic>{
-      'id': instance.id,
-      'email': instance.email,
-      'name': instance.name,
-      'role': _encodeRole(instance.role),
-      'settings': instance.settings,
-    };
+Map<String, dynamic> _$AccountToJson(Account instance) {
+  final val = <String, dynamic>{
+    'id': instance.id,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('email', instance.email);
+  writeNotNull('name', instance.name);
+  writeNotNull('role', _encodeRole(instance.role));
+  val['settings'] = instance.settings;
+  return val;
+}
 
 Settings _$SettingsFromJson(Map<String, dynamic> json) {
   return Settings(
@@ -55,9 +73,19 @@ Settings _$SettingsFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$SettingsToJson(Settings instance) => <String, dynamic>{
-      'blocked': instance.blocked,
-      'initialized': instance.initialized,
-      'method': _encodeMethod(instance.method),
-      'attempts': instance.attempts,
-    };
+Map<String, dynamic> _$SettingsToJson(Settings instance) {
+  final val = <String, dynamic>{
+    'blocked': instance.blocked,
+    'initialized': instance.initialized,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('method', _encodeMethod(instance.method));
+  val['attempts'] = instance.attempts;
+  return val;
+}
