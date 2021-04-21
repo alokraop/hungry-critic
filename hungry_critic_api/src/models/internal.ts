@@ -17,6 +17,8 @@ export class PageInfo {
 
   constructor(params?: any) {
     this.offset = parseInt(params?.['offset']) ?? 0;
+    if (this.offset < 0) this.offset = 0;
     this.limit = parseInt(params?.['limit']) ?? 10;
+    if (this.limit < 0) this.limit = 0;
   }
 }

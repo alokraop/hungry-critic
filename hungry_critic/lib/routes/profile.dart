@@ -35,53 +35,52 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(top: 20),
-        child: StreamBuilder(
-          stream: _bloc.accountStream,
-          initialData: _bloc.account,
-          builder: (BuildContext context, AsyncSnapshot<Account> snapshot) {
-            final account = snapshot.data;
-            final name = account?.name;
-            final email = account?.email;
-            final role = _roleMap[account?.role];
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: 20),
+            child: StreamBuilder(
+              stream: _bloc.accountStream,
+              initialData: _bloc.account,
+              builder: (BuildContext context, AsyncSnapshot<Account> snapshot) {
+                final account = snapshot.data;
+                final name = account?.name;
+                final email = account?.email;
+                final role = _roleMap[account?.role];
+                return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('MY PROFILE', style: _theme.textTheme.headline5),
-                    SizedBox(width: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('MY PROFILE', style: _theme.textTheme.headline5),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    if (name != null) _buildCard('NAME', name),
+                    if (email != null) _buildCard('EMAIL', email),
+                    if (role != null) _buildCard('ROLE', role),
+                    SizedBox(height: 20),
                     SizedBox(
-                      width: 45,
-                      height: 45,
+                      width: 35,
+                      height: 35,
                       child: FloatingActionButton(
                         heroTag: 'edit-profile',
-                        child: Icon(Icons.edit, color: greySwatch[50]),
+                        child: Icon(Icons.edit, color: greySwatch[50], size: 18),
                         onPressed: _editProfile,
                       ),
                     ),
                   ],
-                ),
-                SizedBox(height: 20),
-                if (name != null) _buildCard('NAME', name),
-                if (email != null) _buildCard('EMAIL', email),
-                if (role != null) _buildCard('ROLE', role),
-                SizedBox(height: 20),
-                TextButton(
-                  child: Text(
-                    'LOGOUT',
-                    style: _theme.textTheme.subtitle1?.copyWith(
-                      color: _theme.errorColor,
-                    ),
-                  ),
-                  onPressed: _startLogout,
-                )
-              ],
-            );
-          },
-        ),
+                );
+              },
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.logout, color: swatch[300]),
+            onPressed: _startLogout,
+          )
+        ],
       ),
     );
   }

@@ -40,12 +40,15 @@ export class FilterCriteria {
   constructor(query: any) {
     const rating = query['rating'];
     if (rating) {
-      if (rating instanceof String) {
+      if (typeof rating === 'string') {
         this.initRating(rating);
       } else {
         rating.forEach((r: string) => this.initRating(r));
       }
     }
+
+    this.minRating = this.minRating ?? 0;
+    this.maxRating = this.maxRating ?? 5;
   }
 
   makeQuery() {
@@ -60,9 +63,11 @@ export class FilterCriteria {
     switch (parts[0]) {
       case 'lte':
         this.maxRating = parseFloat(parts[1]);
+        if(this.maxRating > 5) this.maxRating = 5;
         break;
       case 'gte':
         this.minRating = parseFloat(parts[1]);
+        if(this.minRating < 0) this.minRating = 0;
         break;
     }
   }

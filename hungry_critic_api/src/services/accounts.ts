@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import { APIError } from '../controllers/middleware/error';
 import { AccountDao } from '../data/accounts';
-import { Account, AuthReceipt, Settings, UserRole } from '../models/account';
+import { Account, AuthReceipt, Profile, Settings, UserRole } from '../models/account';
 import { PageInfo, TokenInfo } from '../models/internal';
 import { RestaurantService } from './restaurants';
 import { TokenService } from './token';
@@ -14,10 +14,7 @@ export class AccountService {
     private rService: RestaurantService,
   ) {}
 
-  async fetchAll(caller: TokenInfo, page: PageInfo): Promise<Account[]> {
-    if (caller.role !== UserRole.ADMIN) {
-      throw new Error("You don't have priviledges to view all users");
-    }
+  async fetchAll(page: PageInfo): Promise<Account[]> {
     return this.dao.findAll({}, { 'settings.hashedPassword': 0 }, page);
   }
 
@@ -33,33 +30,29 @@ export class AccountService {
     return this.dao.save(account);
   }
 
-  async createProfile(account: Account, caller: TokenInfo): Promise<AuthReceipt> {
-    if (caller.id !== account.id) {
-      throw new APIError("You don't have priviledges to modify this account!", 403);
-    }
+  async createProfile(account: Account): Promise<AuthReceipt> {
     const existing = await this.dao.fetch(account.id);
     if (!existing) throw new APIError("Can't create a profile before creating the account!");
-    if (existing.settings.initialized) throw new APIError('Profile exists!!');
+    const { settings } = existing;
+    if (settings.initialized) throw new APIError('Profile exists!!');
     await this.dao.update(
       { id: account.id },
       {
         ...account,
-        settings: { ...existing.settings, initialized: account.role !== UserRole.ADMIN },
+        settings: { ...settings, initialized: account.role !== UserRole.ADMIN },
       },
     );
     return { id: account.id, token: this.token.create(account) };
   }
 
-  async updateAccount(id: string, account: Account, caller: TokenInfo): Promise<string> {
-    const self = caller.id === account.id;
-    if (!self && caller.role !== UserRole.ADMIN) {
-      throw new APIError("You don't have priviledges to modify this account!");
-    }
-    const { settings, ...fields } = account;
+  async updateProfile(id: string, account: Profile, caller: TokenInfo): Promise<string> {
+    account.id = id;
+    const self = caller.id === id;
+    const { settings, ...profile } = account;
     if (self) {
-      return this.dao.update({ id }, fields);
+      return this.dao.update({ id }, profile);
     } else {
-      return this.dao.update({ id }, { ...fields, ...this.flatten(settings) });
+      return this.dao.update({ id }, { ...profile, ...this.flatten(settings) });
     }
   }
 
@@ -88,17 +81,18 @@ export class AccountService {
     await this.dao.delete({ id });
     switch (account.role) {
       case UserRole.CUSTOMER:
-        await this.rService.deleteReviews(id);
+        await this.rService.deleteForAuthor(id);
       case UserRole.OWNER:
-        await this.rService.deleteAll(id);
+        await this.rService.deleteForOwner(id);
     }
     return account;
   }
 
   private flatten(settings: Settings) {
-    return {
-      'settings.blocked': settings.blocked,
-      'settings.initialized': settings.initialized,
-    };
+    const { initialized, blocked } = settings;
+    const fields: any = {};
+    if (blocked !== undefined) fields['settings.blocked'] = blocked;
+    if (initialized !== undefined) fields['settings.initialized'] = initialized;
+    return fields;
   }
 }

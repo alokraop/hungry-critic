@@ -7,7 +7,7 @@ export enum SignInMethod {
   FACEBOOK,
 }
 
-export class Credentials {
+export class SignInCredentials {
   @IsDefined()
   identifier: string;
 
@@ -15,11 +15,14 @@ export class Credentials {
   @MinLength(8)
   firebaseId: string;
 
+}
+
+export class SignUpCredentials extends SignInCredentials {
+
   @IsDefined()
   @IsEnum(SignInMethod)
   method: SignInMethod;
 }
-
 export class Settings {
   providerId: string;
 
@@ -35,7 +38,7 @@ export class Settings {
 
   method: SignInMethod;
 
-  constructor(password: HashResult, creds: Credentials) {
+  constructor(password: HashResult, creds: SignUpCredentials) {
     this.providerId = creds.identifier;
     this.hashedPassword = password;
     this.blocked = false;
@@ -57,6 +60,9 @@ export class Profile {
 
   @Allow()
   name: string;
+  
+  @Allow()
+  settings: Settings;
 }
 
 export class Account extends Profile {
@@ -66,10 +72,6 @@ export class Account extends Profile {
   @IsDefined()
   @IsEnum(UserRole)
   role: UserRole;
-  
-  @Allow()
-  settings: Settings;
-
 }
 
 export interface AuthReceipt {

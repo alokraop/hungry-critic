@@ -1,6 +1,6 @@
 import { AccountDao } from '../data/accounts';
 import { FirebaseAuthDao } from '../data/auth';
-import { Account, Credentials } from '../models/account';
+import { Account, SignUpCredentials } from '../models/account';
 import { HashResult } from '../models/internal';
 import { AccountService } from './accounts';
 import { AuthService } from './auth';
@@ -15,7 +15,7 @@ jest.mock('./hash');
 jest.mock('./logging');
 jest.mock('./token');
 
-const creds = <Credentials>{
+const creds = <SignUpCredentials>{
   identifier: 'abcd@example.com',
   firebaseId: '6f1C6GmQLoNL3gfdKH5jUth9Kw83',
 };

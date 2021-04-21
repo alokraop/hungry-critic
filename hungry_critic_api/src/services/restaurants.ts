@@ -6,7 +6,7 @@ import { FilterCriteria, Restaurant, RestaurantDetails } from '../models/restaur
 import { v4 as uuid } from 'uuid';
 import { APIError } from '../controllers/middleware/error';
 import { PageInfo, TokenInfo } from '../models/internal';
-import { Review, ReviewResponse } from '../models/review';
+import { Review, ReviewComment } from '../models/review';
 import { ReviewService } from './reviews';
 
 @Service()
@@ -25,27 +25,24 @@ export class RestaurantService {
     caller: TokenInfo,
   ): Promise<RestaurantDetails[]> {
     let cursor;
+    const query = { averageRating: { $lte: criteria.maxRating, $gte: criteria.minRating } };
     switch (caller.role) {
       case UserRole.CUSTOMER:
-        cursor = await this.dao.findSorted(criteria, { averageRating: -1 }, { _id: 0 }, page);
+        cursor = await this.dao.findSorted(query, { averageRating: -1 }, { _id: 0 }, page);
       case UserRole.OWNER:
         cursor = await this.dao.findSorted(
-          { owner: caller.id, ...criteria },
+          { owner: caller.id, ...query },
           { averageRating: -1 },
           { _id: 0 },
           page,
         );
       case UserRole.ADMIN:
-        cursor = await this.dao.findSorted(criteria, { averageRating: -1 }, { _id: 0 }, page);
+        cursor = await this.dao.findSorted(query, { averageRating: -1 }, { _id: 0 }, page);
     }
     return cursor.toArray();
   }
 
   async create(spec: Restaurant, caller: TokenInfo): Promise<Restaurant> {
-    if (caller.role !== UserRole.OWNER) {
-      throw new APIError("You don't have priviledges to create restaurants!");
-    }
-
     const restaurant = <RestaurantDetails>{
       id: uuid(),
       owner: caller.id,
@@ -58,138 +55,95 @@ export class RestaurantService {
     return restaurant;
   }
 
-  async update(id: string, update: Restaurant, caller: TokenInfo): Promise<any> {
-    const restaurant = await this.dao.find({ id });
-    if (restaurant?.owner !== caller.id && caller.role !== UserRole.ADMIN) {
-      throw new APIError("You don't have priviledges to update this restaurant!", 403);
-    }
+  async update(id: string, update: Restaurant): Promise<any> {
     this.dao.update({ id }, update);
   }
 
-  async delete(id: string, caller: TokenInfo): Promise<any> {
-    const restaurant = await this.fetch(id);
-    if (restaurant.owner !== caller.id && caller.role !== UserRole.ADMIN) {
-      throw new APIError("You don't have priviledges to delete this restaurant!", 403);
-    }
+  async delete(id: string): Promise<any> {
     return Promise.all([this.dao.delete({ id }), this.rService.deleteAll(id)]);
   }
 
   async findReviews(page: PageInfo, caller: TokenInfo): Promise<any> {
-    if(caller.role !== UserRole.OWNER) {
-      throw new APIError("You don't have the priviledges to call this endpoint", 403);
-    }
     const restaurants = await this.dao.findAll({ owner: caller.id });
-    return this.rService.findPending(restaurants.map(r => r.id), page);
+    return this.rService.findPending(
+      restaurants.map((r) => r.id),
+      page,
+    );
   }
 
-  async addReview(id: string, review: Review, caller: TokenInfo): Promise<any> {
-    if (caller.role !== UserRole.CUSTOMER) {
-      throw new APIError("You don't have priviledges to create a review!");
-    }
-    review.restaurant = id;
-    review.author = caller.id;
+  async addReview(review: Review, restaurant: RestaurantDetails): Promise<any> {
     await this.rService.create(review);
 
-    const restaurant = await this.fetch(review.restaurant);
-    this.addRating(restaurant, review);
-    this.updateHighlights(restaurant, review);
-
-    return this.dao.update({ id: review.restaurant }, restaurant);
+    this.addToRating(restaurant, review);
+    return this.updateHighlights(restaurant, review);
   }
 
-  async updateReview(review: Review, caller: TokenInfo) {
-    if (review.author !== caller.id && caller.role !== UserRole.ADMIN) {
-      throw new APIError("You don't have priviledges to update this review!");
-    }
-    const [oldReview, restaurant] = await Promise.all([
-      this.rService.fetch(review.restaurant, review.author),
-      this.fetch(review.restaurant),
-    ]);
+  async updateReview(review: Review, restaurant: RestaurantDetails) {
+    const oldReview = await this.rService.fetch(review.restaurant, review.author);
 
     await this.rService.update(review);
 
-    this.removeRating(restaurant, oldReview);
-    this.addRating(restaurant, review);
-    await this.assignHighlights(restaurant);
-
-    return this.dao.update({ id: review.restaurant }, restaurant);
+    this.removeFromRating(restaurant, oldReview);
+    this.addToRating(restaurant, review);
+    return this.assignHighlights(restaurant);
   }
 
-  async deleteReview(id: string, rId: string, caller: TokenInfo) {
-    if (caller.role !== UserRole.ADMIN) {
-      throw new APIError("You don't have priviledges to delete this review!");
-    }
-    const [oldReview, restaurant] = await Promise.all([
-      this.rService.fetch(rId, id),
-      this.fetch(rId),
-    ]);
+  async deleteReview(id: string, restaurant: RestaurantDetails) {
+    const oldReview = await this.rService.fetch(restaurant.id, id);
 
-    await this.rService.delete(rId, id);
+    await this.rService.delete(restaurant.id, id);
 
-    this.removeRating(restaurant, oldReview);
-    await this.assignHighlights(restaurant);
-
-    return this.dao.update({ id: rId }, restaurant);
+    this.removeFromRating(restaurant, oldReview);
+    return this.assignHighlights(restaurant);
   }
 
-  async deleteReviews(of: string): Promise<any> {
-    const reviews = await this.rService.deleteFor(of);
-    const ids = Array.from(new Set(reviews.map((r) => r.restaurant)));
-    const restaurants = await this.dao.findAll({ id: { $in: ids } });
+  async addComment(restaurant: RestaurantDetails, comment: ReviewComment): Promise<any> {
+    const review = await this.rService.addComment(restaurant.id, comment);
+    return this.updateHighlights(restaurant, review);
+  }
 
-    const futures = restaurants.map(async (r) => this.removeReviews(r, reviews));
+  async updateComment(restaurant: RestaurantDetails, comment: ReviewComment): Promise<any> {
+    const review = await this.rService.updateComment(restaurant.id, comment);
+    return this.updateHighlights(restaurant, review);
+  }
+
+  async removeComment(restaurant: RestaurantDetails, author: string): Promise<any> {
+    const review = await this.rService.deleteComment(restaurant.id, author);
+    return this.updateHighlights(restaurant, review);
+  }
+
+  async deleteForAuthor(author: string): Promise<any> {
+    const reviews = await this.rService.deleteForAuthor(author);
+
+    const rMap = new Map<string, Array<Review>>();
+    reviews.forEach((r) => {
+      if (!rMap.has(r.restaurant)) rMap.set(r.restaurant, []);
+      rMap.get(r.restaurant)?.push(r);
+    });
+
+    const restaurants = await this.dao.findAll({ id: { $in: Array.from(rMap.keys()) } });
+
+    const futures = restaurants.map((r) => {
+      rMap.get(r.id)?.map((re) => this.removeFromRating(r, re));
+      return this.assignHighlights(r);
+    });
     return Promise.all(futures);
   }
 
-  private async removeReviews(restaurant: RestaurantDetails, reviews: Array<Review>) {
-    const rs = reviews.filter((r) => r.restaurant === restaurant.id);
-    rs.forEach((r) => this.removeRating(restaurant, r));
-    await this.assignHighlights(restaurant);
-    return this.dao.update({ id: restaurant.id }, restaurant);
-  }
-
-  async deleteAll(owner: string): Promise<any> {
+  async deleteForOwner(owner: string): Promise<any> {
     const restaurants = await this.dao.findAll({ owner });
     await this.dao.deleteAll({ owner });
     return Promise.all(restaurants.map((r) => this.rService.deleteAll(r.id)));
   }
 
-  async addReply(id: string, author: string, reply: ReviewResponse, info: TokenInfo): Promise<any> {
-    if (info.role === UserRole.CUSTOMER) {
-      throw new APIError("You can't modify this review!");
-    }
-
-    const restaurant = await this.dao.find({ id });
-    if (!restaurant) throw new APIError('This restaurant does not exist!');
-
-    if (restaurant.owner !== info.id && info.role !== UserRole.ADMIN) {
-      throw new APIError("You can't modify this review!");
-    }
-
-    const review = await this.rService.updateReply(restaurant.id, author, reply);
-    const changes = this.updateReviews(restaurant, review);
-    if (changes) await this.dao.update({ id: restaurant.id }, restaurant);
-  }
-
-  async removeReply(id: string, author: string, info: TokenInfo): Promise<any> {
-    if (info.role !== UserRole.ADMIN) throw new APIError("You can't delete the reply");
-
-    const restaurant = await this.dao.find({ id });
-    if (!restaurant) throw new APIError('This restaurant does not exist!');
-
-    const review = await this.rService.deleteReply(restaurant.id, author);
-    const changes = this.updateReviews(restaurant, review);
-    if (changes) await this.dao.update({ id: restaurant.id }, restaurant);
-  }
-
-  private addRating(restaurant: RestaurantDetails, review: Review) {
+  private addToRating(restaurant: RestaurantDetails, review: Review) {
     const aggRating = restaurant.averageRating * restaurant.totalRatings + review.rating;
     restaurant.totalRatings += 1;
     if (review.review) restaurant.totalReviews += 1;
     restaurant.averageRating = aggRating / restaurant.totalRatings;
   }
 
-  private removeRating(restaurant: RestaurantDetails, review: Review) {
+  private removeFromRating(restaurant: RestaurantDetails, review: Review) {
     const aggRating = restaurant.averageRating * restaurant.totalRatings - review.rating;
     restaurant.totalRatings -= 1;
     if (review.review) restaurant.totalReviews -= 1;
@@ -198,32 +152,24 @@ export class RestaurantService {
     restaurant.averageRating = total === 0 ? 0 : aggRating / total;
   }
 
-  private updateHighlights(restaurant: RestaurantDetails, review: Review) {
-    const bestRating = restaurant.bestReview?.rating ?? 0;
-    if (review.rating >= bestRating) restaurant.bestReview = review;
-
-    const worstRating = restaurant.worstReview?.rating ?? 10;
-    if (review.rating <= worstRating) restaurant.worstReview = review;
-  }
-
-  private async assignHighlights(restaurant: RestaurantDetails) {
+  private async assignHighlights(restaurant: RestaurantDetails): Promise<any> {
     const [best, worst] = await Promise.all([
       this.rService.findBest(restaurant.id),
       this.rService.findWorst(restaurant.id),
     ]);
     restaurant.bestReview = best ?? undefined;
     restaurant.worstReview = worst ?? undefined;
+
+    return this.update(restaurant.id, restaurant);
   }
 
-  private updateReviews(restaurant: RestaurantDetails, review: Review) {
-    if (restaurant.bestReview?.author === review.author) {
-      restaurant.bestReview = review;
-      return true;
-    }
-    if (restaurant.worstReview?.author === review.author) {
-      restaurant.worstReview = review;
-      return true;
-    }
-    return false;
+  private updateHighlights(restaurant: RestaurantDetails, review: Review): Promise<any> {
+    const bestRating = restaurant.bestReview?.rating ?? 0;
+    if (review.rating >= bestRating) restaurant.bestReview = review;
+
+    const worstRating = restaurant.worstReview?.rating ?? 10;
+    if (review.rating <= worstRating) restaurant.worstReview = review;
+
+    return this.update(restaurant.id, restaurant);
   }
 }

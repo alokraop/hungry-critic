@@ -4,12 +4,12 @@ import { FirebaseAuthDao } from '../data/auth';
 import {
   Account,
   AuthReceipt,
-  Credentials,
+  SignUpCredentials,
   Settings,
   SignInMethod,
   UserRole,
+  SignInCredentials,
 } from '../models/account';
-import { TokenInfo } from '../models/internal';
 import { AccountService } from './accounts';
 import { HashingService } from './hash';
 import { LoggingService } from './logging';
@@ -25,14 +25,14 @@ export class AuthService {
     private hasher: HashingService,
   ) {}
 
-  async signUp(creds: Credentials): Promise<string> {
+  async signUp(creds: SignUpCredentials): Promise<string> {
     const id = this.hasher.simple(creds.identifier);
     const account = await this.service.fetchInternal(id);
     if (account) throw new APIError('An account with this identifier already exists!');
     return this.createAccount(id, creds);
   }
 
-  async signIn(creds: Credentials): Promise<string> {
+  async signIn(creds: SignInCredentials): Promise<string> {
     const id = this.hasher.simple(creds.identifier);
     const account = await this.service.fetchInternal(id);
     if (!account) throw new APIError("Can't sign into a non-existent account!");
@@ -40,16 +40,12 @@ export class AuthService {
   }
 
   
-  async deleteAccount(id: string, caller: TokenInfo): Promise<any> {
-    if (caller.role != UserRole.ADMIN) {
-      throw new APIError("You don't have privilidges to delete this account!");
-    }
-
+  async deleteAccount(id: string): Promise<any> {
     const account = await this.service.delete(id);
     return this.dao.deleteRecord(account.settings);
   }
 
-  private async createAccount(id: string, creds: Credentials): Promise<any> {
+  private async createAccount(id: string, creds: SignUpCredentials): Promise<any> {
     this.logger.debug('Creating new account', { accountId: id });
     const success = await this.verify(creds);
     if (!success) throw new APIError('You are not authorized to create this account!', 403);
@@ -63,19 +59,19 @@ export class AuthService {
     return this.makeReceipt(account);
   }
 
-  private async verifyCreds(account: Account, creds: Credentials): Promise<any> {
+  private async verifyCreds(account: Account, creds: SignInCredentials): Promise<any> {
     const settings = account.settings;
     if (settings.blocked) throw new APIError('This account has been blocked!', 412);
     const match = await this.hasher.verify(settings.hashedPassword, creds.firebaseId);
     if (!match) {
       await this.service.markFail(account);
-      throw new APIError('The email or password you provided was incorrect', 403);
+      throw new APIError('Your credentials were incorrect', 403);
     }
-    if (settings.attempts > 0) return this.service.resetAttempts(account);
+    if (settings.attempts > 0) await this.service.resetAttempts(account);
     return this.makeReceipt(account);
   }
 
-  async verify(creds: Credentials): Promise<boolean> {
+  async verify(creds: SignUpCredentials): Promise<boolean> {
     const record = await this.dao.fetchRecord(creds.firebaseId);
     switch (creds.method) {
       case SignInMethod.EMAIL:

@@ -55,8 +55,8 @@ class _ReviewsListState extends State<ReviewsList> {
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: _bloc.reviews,
-      initialData: <String>[],
-      builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
+      initialData: <Review>[],
+      builder: (BuildContext context, AsyncSnapshot<List<Review>> snapshot) {
         final data = snapshot.data;
         if (data == null) return Container();
         return SafeArea(
@@ -86,13 +86,12 @@ class _ReviewsListState extends State<ReviewsList> {
     );
   }
 
-  Widget _buildReviews(List<String> ids) {
-    final us = ids.map(_bloc.find).whereType<Review>().toList();
+  Widget _buildReviews(List<Review> reviews) {
     return ListView.builder(
       controller: _controller,
-      itemCount: us.length,
+      itemCount: reviews.length,
       itemBuilder: (context, index) {
-        final review = us[index];
+        final review = reviews[index];
         return ReviewCard(
           review: review,
           onReply: () => _startReply(review),

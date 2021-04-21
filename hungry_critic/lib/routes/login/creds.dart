@@ -195,7 +195,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
                       ),
                       elevation: 2,
                       backgroundColor: greySwatch[300],
-                      onPressed: _showMethods,
+                      onPressed: _reset,
                     ),
                   ],
                 ),
@@ -285,25 +285,44 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
   _buildSwap() {
     return SafeArea(
       bottom: true,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 1),
-            child: Text(
-              _create ? 'Already have an account?' : 'Don\'t have an account?',
-              style: _theme.textTheme.caption,
-            ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5),
+          color: swatch[400],
+        ),
+        padding: EdgeInsets.all(2),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildOption(true),
+              SizedBox(width: 2),
+              _buildOption(false),
+            ],
           ),
-          SizedBox(width: 5),
-          TextButton(
-            child: Text(
-              _create ? 'SIGN IN' : 'CREATE ACCOUNT',
-              style: _theme.textTheme.bodyText2?.copyWith(color: _theme.primaryColor),
-            ),
-            onPressed: _toggleCreate,
-          )
-        ],
+        ),
+      ),
+    );
+  }
+
+  _buildOption(bool create) {
+    return InkWell(
+      onTap: () {
+        _create = create;
+        _reset();
+      },
+      child: Container(
+        width: _screen.width * 0.175,
+        padding: EdgeInsets.symmetric(vertical: 7.5),
+        alignment: Alignment.center,
+        color: _create == create ? Color(0x00000000) : greySwatch[50],
+        child: Text(
+          create ? 'SIGN UP' : 'SIGN IN',
+          style: _theme.textTheme.caption?.copyWith(
+            color: _create == create ? greySwatch[50] : _theme.primaryColor,
+          ),
+        ),
       ),
     );
   }
@@ -318,6 +337,8 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
           return _makeError('Something went wrong! Try again.');
         case AuthStatus.BLOCKED:
           return _makeError('This account has been blocked! Contact the admin!');
+        case AuthStatus.NO_ACCOUNT:
+          return _makeError('No account found! Try signing up!');
         default:
       }
     }
@@ -343,21 +364,18 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
     );
   }
 
-  _toggleCreate() {
-    _status = AuthStatus.NONE;
-    setState(() => _create = !_create);
-  }
-
   _authWithEmail() {
     _onError(e) => _handleError(e, SignInMethod.EMAIL);
     if (_loading) return;
     widget.onDrop();
     _loading = true;
-    setState(() {});
     if (_passKey.currentState?.validate() ?? false) {
       final data = EmailData(_emailC.text, _passC.text, _create);
       widget.service.authWithEmail(data).then(_onSuccess).catchError(_onError);
+    } else {
+      _loading = false;
     }
+    setState(() {});
   }
 
   _authWithSocial(SignInMethod method) async {
@@ -393,15 +411,17 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
       case SignInMethod.FACEBOOK:
         if (exception is PlatformException && exception.code == 'SIGN_IN_CANCELED') {
           Aspects.instance.log('Login -> $method -> Canceled');
-        }
-        if (exception is LoginException) {
+        } else if (exception is LoginException) {
           Aspects.instance.log('Login -> $method -> Fail');
           switch (exception.status) {
             case 400:
-              if (_create) _status = AuthStatus.DUPLICATE;
+              _status = _create ? AuthStatus.DUPLICATE : AuthStatus.NO_ACCOUNT;
               break;
             case 412:
               _status = AuthStatus.BLOCKED;
+              break;
+            default:
+              _status = AuthStatus.ERROR;
           }
         } else {
           Aspects.instance.recordError(exception);
@@ -420,18 +440,26 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
             case 'email-already-in-use':
               _status = AuthStatus.DUPLICATE;
               break;
+            case 'weak-password':
+              _status = AuthStatus.WEAK_PASSWORD;
+              break;
+            case 'user-not-found':
+              _status = AuthStatus.NO_ACCOUNT;
           }
         } else if (exception is LoginException) {
           Aspects.instance.log('Login -> $method -> Fail');
           switch (exception.status) {
             case 400:
-              if (_create) _status = AuthStatus.DUPLICATE;
+              _status = _create ? AuthStatus.DUPLICATE : AuthStatus.NO_ACCOUNT;
               break;
             case 403:
               if (!_create) _status = AuthStatus.INCORRECT_CREDS;
               break;
             case 412:
               _status = AuthStatus.BLOCKED;
+              break;
+            default:
+              _status = AuthStatus.ERROR;
           }
         } else {
           Aspects.instance.recordError(exception);
@@ -447,18 +475,20 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
     if (_emailKey.currentState?.validate() ?? false) _pass.forward();
   }
 
-  _showMethods() {
-    _pass.reverse();
+  _reset() {
+    if (_pass.isCompleted) _pass.reverse();
+    _emailC.text = '';
+    _passC.text = '';
+    _cPassC.text = '';
+    _status = AuthStatus.NONE;
+    _emailKey.currentState?.reset();
+    _passKey.currentState?.reset();
+    setState(() {});
   }
 
   String? _validateEmail(String? value) {
     value ??= '';
     if (!RegExp(eReg).hasMatch(value)) return 'Invalid email address';
-    if (_status == AuthStatus.NO_ACCOUNT) return 'No account found';
-    if (_status == AuthStatus.DUPLICATE) {
-      _status = AuthStatus.NONE;
-      return 'This email already has an account!';
-    }
     return null;
   }
 
@@ -473,6 +503,8 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
         return 'This account has been blocked! Contact admin!';
       case AuthStatus.DUPLICATE:
         return 'This account already exists! Try signing in!';
+      case AuthStatus.NO_ACCOUNT:
+        return 'No account found';
       default:
         return null;
     }

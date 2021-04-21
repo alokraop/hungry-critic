@@ -39,7 +39,7 @@ class UserBloc {
 
   Future<bool> loadMore() async {
     final query = {
-      'offset': _users.length.toString(),
+      'offset': _uMap.keys.length.toString(),
       'limit': limit.toString(),
     };
     final length = await _load(query);

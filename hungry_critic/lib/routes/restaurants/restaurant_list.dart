@@ -146,7 +146,7 @@ class _RestaurantListState extends State<RestaurantList> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12.5),
-          color: swatch[100],
+          color: swatch[300],
         ),
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7.5),
         child: Row(

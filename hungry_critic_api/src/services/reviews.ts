@@ -2,9 +2,8 @@ import { MongoError } from 'mongodb';
 import { Service } from 'typedi';
 import { APIError } from '../controllers/middleware/error';
 import { ReviewsDao } from '../data/reviews';
-import { UserRole } from '../models/account';
-import { PageInfo, TokenInfo } from '../models/internal';
-import { Review, ReviewResponse } from '../models/review';
+import { PageInfo } from '../models/internal';
+import { Review, ReviewComment } from '../models/review';
 
 @Service()
 export class ReviewService {
@@ -58,24 +57,32 @@ export class ReviewService {
     return this.dao.deleteAll({ restaurant: rId });
   }
 
-  async deleteFor(of: string): Promise<Array<Review>> {
+  async deleteForAuthor(of: string): Promise<Array<Review>> {
     const reviews = await this.dao.findAll({ author: of });
     await this.dao.deleteAll({ author: of });
     return reviews;
   }
 
-  async updateReply(restaurant: string, author: string, reply: ReviewResponse): Promise<Review> {
-    const review = await this.dao.find({ restaurant, author });
-    if (!review) throw new APIError("This review doesn't exist");
+  async addComment(restaurant: string, comment: ReviewComment): Promise<Review> {
+    const review = await this.fetch(restaurant, comment.reviewer);
+    if (review.reply) throw new APIError('This review already has a reply!');
 
-    review.reply = reply.response;
-    await this.dao.update({ restaurant, author }, review);
+    review.reply = comment.response;
+    await this.dao.update({ restaurant, author: comment.reviewer }, review);
     return review;
   }
 
-  async deleteReply(restaurant: string, author: string): Promise<Review> {
-    const review = await this.dao.find({ restaurant, author });
-    if (!review) throw new APIError("This review doesn't exist");
+  async updateComment(restaurant: string, comment: ReviewComment): Promise<Review> {
+    const review = await this.fetch(restaurant, comment.reviewer);
+    if (!review.reply) throw new APIError('This review does not have a reply to update!');
+
+    review.reply = comment.response;
+    await this.dao.update({ restaurant, author: comment.reviewer }, review);
+    return review;
+  }
+
+  async deleteComment(restaurant: string, author: string): Promise<Review> {
+    const review = await this.fetch(restaurant, author);
 
     delete review.reply;
     await this.dao.rawUpdate({ restaurant, author }, { $unset: { reply: '' } });

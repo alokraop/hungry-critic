@@ -56,6 +56,7 @@ class ReviewBloc {
   pop() {
     _restaurant = null;
     _reviews = [];
+    _rMap = {};
     _publish();
   }
 

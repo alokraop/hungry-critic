@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hungry_critic/shared/timestamp.dart';
 
 import '../../blocs/account.dart';
 import '../../blocs/restaurant.dart';
@@ -398,7 +399,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
       controller: _pageC,
       children: [
         ListView(
-          padding: EdgeInsets.symmetric(horizontal: 15),
+          padding: EdgeInsets.only(left: 15, right: 15, bottom: 70),
           children: [
             SizedBox(height: 20),
             if (mine != null) _buildHighlight('MY REVIEW', mine),
@@ -414,7 +415,7 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
             if (data == null) return Container();
             return ListView(
               controller: _controller,
-              padding: EdgeInsets.symmetric(horizontal: 32.5),
+              padding: EdgeInsets.only(left: 32.5, right: 32.5, bottom: 70),
               children: [
                 SizedBox(height: 20),
                 ...data
@@ -504,11 +505,18 @@ class _RestaurantDetailsState extends State<RestaurantDetails> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        SizedBox(height: 5),
         ReviewView(review: review),
         if (isAdmin()) _buildOptions(review),
         _buildReply(review),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Timestamp(time: review.timestamp, ignoreDate: false, relative: true),
+          ],
+        ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7.5),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
           child: Divider(thickness: 0.75),
         ),
       ],

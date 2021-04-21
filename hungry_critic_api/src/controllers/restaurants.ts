@@ -1,9 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 
 import { Container } from 'typedi';
+import { UserRole } from '../models/account';
 import { PageInfo } from '../models/internal';
 import { FilterCriteria, Restaurant } from '../models/restaurant';
 import { RestaurantService } from '../services/restaurants';
+import { Roles, Allow } from './middleware/authorize';
+import { AllowOwner, FetchRestaurant } from './middleware/restaurant';
 import { Validate } from './middleware/validation';
 import { reviewRouter } from './reviews';
 
@@ -20,20 +23,43 @@ restaurantRouter.get('/', async (req: Request, res: Response) => {
   res.json(restaurants);
 });
 
-restaurantRouter.post('/', Validate(Restaurant), async (req: Request, res: Response) => {
-  const restaurant = await service().create(req.body, res.locals.info);
+restaurantRouter.get('/:rId', async (req: Request, res: Response) => {
+  const restaurant = await service().fetch(req.params.rId);
   res.json(restaurant);
 });
 
-restaurantRouter.put('/:id', Validate(Restaurant), async (req: Request, res: Response) => {
-  await service().update(req.params.id, req.body, res.locals.info);
-  res.send();
-});
+restaurantRouter.post(
+  '/',
+  Validate(Restaurant),
+  Allow(Roles(UserRole.OWNER)),
+  async (req: Request, res: Response) => {
+    const restaurant = await service().create(req.body, res.locals.info);
+    res.json(restaurant);
+  },
+);
 
-restaurantRouter.delete('/:id', async (req: Request, res: Response) => {
-  await service().delete(req.params.id, res.locals.info);
-  res.send();
-});
+restaurantRouter.put(
+  '/:rId',
+  Validate(Restaurant),
+  Allow(Roles(UserRole.ADMIN, UserRole.OWNER)),
+  FetchRestaurant,
+  Allow(Roles(UserRole.ADMIN), AllowOwner),
+  async (req: Request, res: Response) => {
+    await service().update(req.params.rId, req.body);
+    res.send();
+  },
+);
+
+restaurantRouter.delete(
+  '/:rId',
+  Allow(Roles(UserRole.ADMIN, UserRole.OWNER)),
+  FetchRestaurant,
+  Allow(Roles(UserRole.ADMIN), AllowOwner),
+  async (req: Request, res: Response) => {
+    await service().delete(req.params.rId);
+    res.send();
+  },
+);
 
 restaurantRouter.use(
   '/:rId/reviews',

@@ -19,15 +19,11 @@ class PendingReviewBloc {
 
   final RestaurantBloc rBloc;
 
-  List<String> _reviews = [];
+  List<Review> _reviews = [];
 
-  Map<String, Review> _rMap = {};
+  final _rSubject = BehaviorSubject<List<Review>>();
 
-  final _rSubject = BehaviorSubject<List<String>>();
-
-  Stream<List<String>> get reviews => _rSubject.stream;
-
-  Review? find(String id) => _rMap[id];
+  Stream<List<Review>> get reviews => _rSubject.stream;
 
   Future init() {
     _reviews = [];
@@ -36,9 +32,8 @@ class PendingReviewBloc {
 
   Future<int> _load([Map<String, dynamic>? query]) async {
     final rs = await _api.findAll(query);
-    rs.forEach((r) => _rMap[r.author] = r);
     rs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    _reviews.addAll(rs.map((r) => r.author).toList());
+    _reviews.addAll(rs);
     _publish();
     return rs.length;
   }
@@ -53,8 +48,9 @@ class PendingReviewBloc {
   }
 
   Future updateReply(Review review, String reply) async {
-    _reviews.remove(review.author);
-    _rMap.remove(review.author);
+    _reviews.removeWhere(
+      (r) => r.restaurant == review.restaurant && r.author == review.author,
+    );
     review.reply = reply;
     _publish();
     return Future.wait([

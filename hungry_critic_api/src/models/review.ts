@@ -23,12 +23,12 @@ export class Review {
 
   reply?: string;
 
-  @IsDefined()
-  @IsPositive()
   timestamp: number;
 }
 
-export class ReviewResponse {
+export class ReviewComment {
   @Allow()
   response: string;
+
+  reviewer: string;
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../models/review.dart';
 import '../../shared/colors.dart';
-import '../../shared/timestamp.dart';
 import 'common.dart';
 
 class ReviewView extends StatelessWidget {
@@ -14,6 +14,7 @@ class ReviewView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final _theme = Theme.of(context);
+    final format = DateFormat.yMd();
     return Column(
       children: [
         Row(
@@ -27,11 +28,16 @@ class ReviewView extends StatelessWidget {
                     style: _theme.textTheme.subtitle1?.copyWith(color: greySwatch[800]),
                   ),
                   SizedBox(width: 5),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 1),
-                    child: Timestamp(time: review.timestamp, relative: true, ignoreDate: false),
-                  ),
                 ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 7.5),
+              child: Text(
+                format.format(review.dateOfVisit),
+                style: _theme.textTheme.caption?.copyWith(
+                  color: greySwatch[400],
+                ),
               ),
             ),
             Container(
