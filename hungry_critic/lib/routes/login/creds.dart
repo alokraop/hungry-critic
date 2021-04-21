@@ -252,7 +252,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
           child: FloatingActionButton(
             key: ValueKey('submitPhoneNumber'),
             onPressed: _startEmailFlow,
-            child: Icon(Icons.arrow_upward),
+            child: Icon(Icons.arrow_forward),
             backgroundColor: _theme.primaryColor,
           ),
         ),
@@ -284,24 +284,30 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
 
   _buildSwap() {
     return SafeArea(
-      bottom: true,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
-          color: swatch[400],
-        ),
-        padding: EdgeInsets.all(2),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildOption(true),
-              SizedBox(width: 2),
-              _buildOption(false),
-            ],
+      bottom: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: swatch[400],
+            ),
+            margin: EdgeInsets.only(top: 10),
+            padding: EdgeInsets.all(2),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildOption(true),
+                  SizedBox(width: 2),
+                  _buildOption(false),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -313,7 +319,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
         _reset();
       },
       child: Container(
-        width: _screen.width * 0.175,
+        width: _screen.width * 0.2,
         padding: EdgeInsets.symmetric(vertical: 7.5),
         alignment: Alignment.center,
         color: _create == create ? Color(0x00000000) : greySwatch[50],
@@ -370,7 +376,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
     widget.onDrop();
     _loading = true;
     if (_passKey.currentState?.validate() ?? false) {
-      final data = EmailData(_emailC.text, _passC.text, _create);
+      final data = EmailData(_emailC.text.toLowerCase(), _passC.text, _create);
       widget.service.authWithEmail(data).then(_onSuccess).catchError(_onError);
     } else {
       _loading = false;
@@ -483,6 +489,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
     _status = AuthStatus.NONE;
     _emailKey.currentState?.reset();
     _passKey.currentState?.reset();
+    widget.onDrop();
     setState(() {});
   }
 

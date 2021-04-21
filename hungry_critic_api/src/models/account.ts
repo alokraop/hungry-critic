@@ -49,7 +49,7 @@ export class Settings {
 }
 
 export enum UserRole {
-  CUSTOMER,
+  USER,
   OWNER,
   ADMIN,
 }

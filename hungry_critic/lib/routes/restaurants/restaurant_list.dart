@@ -71,7 +71,7 @@ class _RestaurantListState extends State<RestaurantList> {
           child: Column(
             children: [
               if (data.isNotEmpty) _buildOptions(),
-              Expanded(child: _buildRecords(data)),
+              Expanded(child: _buildRestaurants(data)),
             ],
           ),
         );
@@ -187,7 +187,16 @@ class _RestaurantListState extends State<RestaurantList> {
     setState(() {});
   }
 
-  Widget _buildRecords(List<String> ids) {
+  Widget _buildRestaurants(List<String> ids) {
+    if (ids.isEmpty) {
+      return Center(
+        child: Text(
+          'No restaurants yet!',
+          style: _theme.textTheme.subtitle1?.copyWith(color: greySwatch[600]),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
     final rs = ids
         .map(_bloc.find)
         .whereType<Restaurant>()

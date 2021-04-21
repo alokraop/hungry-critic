@@ -26,6 +26,7 @@ export class AuthService {
   ) {}
 
   async signUp(creds: SignUpCredentials): Promise<string> {
+    creds.identifier = creds.identifier.toLowerCase();
     const id = this.hasher.simple(creds.identifier);
     const account = await this.service.fetchInternal(id);
     if (account) throw new APIError('An account with this identifier already exists!');
@@ -33,6 +34,7 @@ export class AuthService {
   }
 
   async signIn(creds: SignInCredentials): Promise<string> {
+    creds.identifier = creds.identifier.toLowerCase();
     const id = this.hasher.simple(creds.identifier);
     const account = await this.service.fetchInternal(id);
     if (!account) throw new APIError("Can't sign into a non-existent account!");
@@ -52,7 +54,7 @@ export class AuthService {
     const hashedPassword = await this.hasher.withSalt(creds.firebaseId);
     const account = <Account>{
       id,
-      role: UserRole.CUSTOMER,
+      role: UserRole.USER,
       settings: new Settings(hashedPassword, creds),
     };
     await this.service.create(account);

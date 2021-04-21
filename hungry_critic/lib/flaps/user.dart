@@ -103,19 +103,19 @@ class _UserFormState extends EntityCreator<UserForm> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Initialize?',
+                  'Activate:',
                   style: _theme.textTheme.bodyText1,
                 ),
                 _buildOptionSet(_initialized, (i) => setState(() => _initialized = i)),
               ],
             ),
           ),
-        if (_initialized)
+        if (settings.initialized)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Block?',
+                'Block:',
                 style: _theme.textTheme.bodyText1,
               ),
               _buildOptionSet(_blocked, (i) => setState(() => _blocked = i)),

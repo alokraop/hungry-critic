@@ -25,7 +25,7 @@ reviewRouter.get('/', async (req: Request, res: Response) => {
 reviewRouter.post(
   '/',
   Validate(Review),
-  Allow(Roles(UserRole.CUSTOMER)),
+  Allow(Roles(UserRole.USER)),
   MakeReview,
   FetchRestaurant,
   async (_: Request, res: Response) => {

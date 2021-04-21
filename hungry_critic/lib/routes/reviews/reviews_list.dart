@@ -87,6 +87,15 @@ class _ReviewsListState extends State<ReviewsList> {
   }
 
   Widget _buildReviews(List<Review> reviews) {
+    if (reviews.isEmpty) {
+      return Center(
+        child: Text(
+          'No new reviews yet!',
+          style: _theme.textTheme.subtitle1?.copyWith(color: greySwatch[600]),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
     return ListView.builder(
       controller: _controller,
       itemCount: reviews.length,

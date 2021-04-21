@@ -80,7 +80,7 @@ export class AccountService {
     if (!account) throw new APIError("This account doesn't exist");
     await this.dao.delete({ id });
     switch (account.role) {
-      case UserRole.CUSTOMER:
+      case UserRole.USER:
         await this.rService.deleteForAuthor(id);
       case UserRole.OWNER:
         await this.rService.deleteForOwner(id);

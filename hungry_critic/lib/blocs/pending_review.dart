@@ -47,10 +47,8 @@ class PendingReviewBloc {
     return length == limit;
   }
 
-  Future updateReply(Review review, String reply) async {
-    _reviews.removeWhere(
-      (r) => r.restaurant == review.restaurant && r.author == review.author,
-    );
+  Future addComment(Review review, String reply) async {
+    _reviews.remove(review);
     review.reply = reply;
     _publish();
     return Future.wait([

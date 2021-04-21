@@ -8,7 +8,7 @@ describe('Checking all methods', () => {
     const service = new TokenService(new LoggingService());
     const token = service.create(<Account>{
       id: 'sample-id',
-      role: UserRole.CUSTOMER,
+      role: UserRole.USER,
       email: 'alokraop@gmail.com',
       name: 'Alok',
     });

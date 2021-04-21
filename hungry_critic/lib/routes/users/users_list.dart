@@ -88,6 +88,15 @@ class _UsersListState extends State<UsersList> {
   }
 
   Widget _buildRecords(List<String> ids) {
+    if (ids.isEmpty) {
+      return Center(
+        child: Text(
+          'No users yet!',
+          style: _theme.textTheme.subtitle1?.copyWith(color: greySwatch[600]),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
     final us = ids.map(_bloc.find).whereType<Account>().toList();
     return ListView.builder(
       controller: _controller,
