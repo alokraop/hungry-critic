@@ -13,16 +13,17 @@ describe('Checking all methods', () => {
       name: 'Alok',
     });
     expect(token).toBe(
-      'eyJhbGciOiJIUzI1NiJ9.c2FtcGxlLWlk.Ehi6ID6CdSwQqE1LGJqMBbnuFK0Mc5udnvPcBkxGJeg',
+      'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InNhbXBsZS1pZCIsInJvbGUiOjB9.l_z5KTb7SSkU6ns5WwsoYqv0hR2BH0ZOh-XfjdTVohA',
     );
   });
 
   test('Verify token', () => {
     const service = new TokenService(new LoggingService());
-    const value = service.verify(
-      'eyJhbGciOiJIUzI1NiJ9.c2FtcGxlLWlk.Ehi6ID6CdSwQqE1LGJqMBbnuFK0Mc5udnvPcBkxGJeg',
+    const info = service.verify(
+      'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InNhbXBsZS1pZCIsInJvbGUiOjB9.l_z5KTb7SSkU6ns5WwsoYqv0hR2BH0ZOh-XfjdTVohA',
     );
-    expect(value).toBe('sample-id');
+    expect(info?.id).toBe('sample-id');
+    expect(info?.role).toBe(0);
   });
 
   test('Invalid token', () => {

@@ -25,7 +25,7 @@ export class AuthService {
     private hasher: HashingService,
   ) {}
 
-  async signUp(creds: SignUpCredentials): Promise<string> {
+  async signUp(creds: SignUpCredentials): Promise<AuthReceipt> {
     creds.identifier = creds.identifier.toLowerCase();
     const id = this.hasher.simple(creds.identifier);
     const account = await this.service.fetchInternal(id);
@@ -33,7 +33,7 @@ export class AuthService {
     return this.createAccount(id, creds);
   }
 
-  async signIn(creds: SignInCredentials): Promise<string> {
+  async signIn(creds: SignInCredentials): Promise<AuthReceipt> {
     creds.identifier = creds.identifier.toLowerCase();
     const id = this.hasher.simple(creds.identifier);
     const account = await this.service.fetchInternal(id);
@@ -47,7 +47,7 @@ export class AuthService {
     return this.dao.deleteRecord(account.settings);
   }
 
-  private async createAccount(id: string, creds: SignUpCredentials): Promise<any> {
+  private async createAccount(id: string, creds: SignUpCredentials): Promise<AuthReceipt> {
     this.logger.debug('Creating new account', { accountId: id });
     const success = await this.verify(creds);
     if (!success) throw new APIError('You are not authorized to create this account!', 403);
@@ -61,7 +61,7 @@ export class AuthService {
     return this.makeReceipt(account);
   }
 
-  private async verifyCreds(account: Account, creds: SignInCredentials): Promise<any> {
+  private async verifyCreds(account: Account, creds: SignInCredentials): Promise<AuthReceipt> {
     const settings = account.settings;
     if (settings.blocked) throw new APIError('This account has been blocked!', 412);
     const match = await this.hasher.verify(settings.hashedPassword, creds.firebaseId);

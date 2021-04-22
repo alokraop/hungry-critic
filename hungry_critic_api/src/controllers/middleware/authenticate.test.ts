@@ -1,9 +1,11 @@
 import 'reflect-metadata';
-import { Authenticate } from './auth';
+import { Authenticate } from './authenticate';
 import Container from 'typedi';
 import { TokenService } from '../../services/token';
 import { LoggingService } from '../../services/logging';
 import { getMockReq, getMockRes } from '@jest-mock/express';
+import { UserRole } from '../../models/account';
+import { TokenInfo } from '../../models/internal';
 jest.mock('../../services/token');
 jest.mock('../../services/logging');
 
@@ -11,7 +13,7 @@ describe('All auth variations', () => {
   beforeAll(() => {
     const verify = TokenService.prototype.verify as jest.Mock;
     verify.mockImplementation((token: string) => {
-      return token === 'good' ? 'test-id' : undefined;
+      return token === 'good' ? { id: 'test-id', role: UserRole.USER } : undefined;
     });
     Container.set(TokenService, new TokenService(new LoggingService()));
   });
@@ -21,7 +23,9 @@ describe('All auth variations', () => {
     const { res, next } = getMockRes();
     Authenticate(req, res, next);
 
-    expect(res.locals.accountId).toBe('test-id');
+    const info: TokenInfo = res.locals.info;
+    expect(info.id).toBe('test-id');
+    expect(info.role).toBe(UserRole.USER);
     expect(next).toBeCalledTimes(1);
   });
 

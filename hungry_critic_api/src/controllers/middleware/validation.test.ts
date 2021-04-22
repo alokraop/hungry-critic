@@ -1,14 +1,15 @@
 import { getMockReq, getMockRes } from '@jest-mock/express';
-import { Account } from '../../models/account';
+import { Account, UserRole } from '../../models/account';
 import { Validate } from './validation';
 
 describe('Validating Account', () => {
   test('Valid', async () => {
     const validator = Validate(Account);
-    const account = {
+    const account = <Account>{
       id: 'some-id',
-      email: 'abcd@example.com',
-      password: 'password',
+      email: 'abc@example.com',
+      role: UserRole.USER,
+      name: 'some-user',
     };
     const req = getMockReq({
       body: account,
@@ -16,40 +17,37 @@ describe('Validating Account', () => {
     const { res, next } = getMockRes();
     await validator(req, res, next);
 
-    expect(next).toBeCalledWith();
+    expect(next).toBeCalled();
   });
 
   test('Missing field', async () => {
     const validator = Validate(Account);
     const req = getMockReq({
       body: {
-        email: 'abcd@example.com',
-        password: 'password',
+        id: 'some-id',
+        email: 'abc@example.com',
+        name: 'some-user',
       },
     });
     const { res, next } = getMockRes();
     await validator(req, res, next);
 
-    const errors = [expect.objectContaining({ property: 'id' })];
+    const errors = [expect.objectContaining({ property: 'role' })];
     expect(next).toBeCalledWith(expect.arrayContaining(errors));
   });
 
   test('Invalid value', async () => {
     const validator = Validate(Account);
     const req = getMockReq({
-      body: {
-        id: 'some-id',
-        email: 'abcd',
-        username: 'some-name',
-      },
+      body: { id: 'some-id', email: 'abc@example.com', role: 6, name: 'some-user' },
     });
     const { res, next } = getMockRes();
     await validator(req, res, next);
 
     const errors = [
       expect.objectContaining({
-        property: 'email',
-        constraints: { isEmail: 'email must be an email' },
+        property: 'role',
+        constraints: { isEnum: 'role must be a valid enum value' },
       }),
     ];
     expect(next).toBeCalledWith(expect.arrayContaining(errors));
@@ -60,14 +58,14 @@ describe('Validating Account', () => {
     const req = getMockReq({
       body: {
         email: 'abcd',
-        username: 'some-name',
+        name: 'some-name',
       },
     });
     const { res, next } = getMockRes();
     await validator(req, res, next);
 
     const errors = [
-      expect.objectContaining({ property: 'id' }),
+      expect.objectContaining({ property: 'role' }),
       expect.objectContaining({ property: 'email' }),
     ];
     expect(next).toBeCalledWith(expect.arrayContaining(errors));

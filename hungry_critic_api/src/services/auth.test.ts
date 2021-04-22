@@ -9,7 +9,7 @@ import { LoggingService } from './logging';
 import { RestaurantService } from './restaurants';
 import { TokenService } from './token';
 jest.mock('../data/auth');
-jest.mock('./account');
+jest.mock('./accounts');
 jest.mock('../data/accounts');
 jest.mock('./hash');
 jest.mock('./logging');
@@ -52,8 +52,10 @@ describe('Sign up tests', () => {
     const fetch = AccountService.prototype.fetchInternal as jest.Mock;
     fetch.mockImplementation((_: string) => undefined);
 
-    const token = await service.signUp(creds);
-    expect(token).toBe('some-token');
+    const receipt = await service.signUp(creds);
+    expect(receipt.id).toBe('some-id');
+    expect(receipt.token).toBe('some-token');
     expect(fetch).toBeCalledTimes(1);
+    expect(record).toBeCalledTimes(1);
   });
 });

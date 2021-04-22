@@ -4,7 +4,7 @@ import Container from 'typedi';
 import { accountRouter } from './controllers/accounts';
 import { authRouter } from './controllers/auth';
 import { HandleErrors } from './controllers/middleware/error';
-import { Authenticate } from './controllers/middleware/auth';
+import { Authenticate } from './controllers/middleware/authenticate';
 import { LoggingService } from './services/logging';
 import { restaurantRouter } from './controllers/restaurants';
 import { reviewRouter } from './controllers/pending_reviews';

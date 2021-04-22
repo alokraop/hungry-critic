@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Account, UserRole } from '../../models/account';
 import { TokenInfo } from '../../models/internal';
-import { Review } from '../../models/review';
 import { APIError } from './error';
 
 type Authorizer = (req: Request, res: Response) => boolean;
