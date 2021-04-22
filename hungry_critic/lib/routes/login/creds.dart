@@ -373,6 +373,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
   }
 
   _authWithEmail() {
+    _status = AuthStatus.NONE;
     _onError(e) => _handleError(e, SignInMethod.EMAIL);
     if (_loading) return;
     widget.onDrop();
@@ -387,6 +388,7 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
   }
 
   _authWithSocial(SignInMethod method) async {
+    _status = AuthStatus.NONE;
     _onError(e) => _handleError(e, method);
     if (_loading) return;
     widget.onDrop();

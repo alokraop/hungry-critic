@@ -28,7 +28,9 @@ export class RestaurantService {
     const query = { averageRating: { $lte: criteria.maxRating, $gte: criteria.minRating } };
     switch (caller.role) {
       case UserRole.USER:
+      case UserRole.ADMIN:
         cursor = await this.dao.findSorted(query, { averageRating: -1 }, { _id: 0 }, page);
+        break;
       case UserRole.OWNER:
         cursor = await this.dao.findSorted(
           { owner: caller.id, ...query },
@@ -36,8 +38,7 @@ export class RestaurantService {
           { _id: 0 },
           page,
         );
-      case UserRole.ADMIN:
-        cursor = await this.dao.findSorted(query, { averageRating: -1 }, { _id: 0 }, page);
+        break;
     }
     return cursor.toArray();
   }

@@ -110,7 +110,10 @@ class SignUpService {
       create: create,
       email: gAccount.email,
     );
-    return authenticate(data, uCred.user);
+    return authenticate(data, uCred.user).catchError((e) {
+      gAuth.signOut();
+      throw e;
+    });
   }
 
   Future<AuthStatus> authWithFacebook(bool create) async {
@@ -125,7 +128,10 @@ class SignUpService {
     final cred = FacebookAuthProvider.credential(accessToken.token);
     final uCred = await _createUser(cred);
     final info = SignInData(accessToken.userId, SignInMethod.FACEBOOK, create: create);
-    return authenticate(info, uCred.user);
+    return authenticate(info, uCred.user).catchError((e) {
+      FacebookAuth.instance.logOut();
+      throw e;
+    });
   }
 
   Future<AuthStatus> authenticate(SignInData info, User? user) async {
