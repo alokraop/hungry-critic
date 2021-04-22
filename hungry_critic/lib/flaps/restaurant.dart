@@ -15,6 +15,7 @@ final cuisines = [
   'American',
   'Arabic',
   'Brazilian',
+  'Cafe',
   'Chinese',
   'French',
   'Fast Food',
@@ -235,16 +236,9 @@ class _RestaurantFormState extends EntityCreator<RestaurantForm> {
       address: _addC.text,
       cuisines: _cuisines,
     );
-    if (widget.restaurant == null) {
-      return _bloc
-          .createNew(restaurant)
-          .then((_) => SubmitStatus.SUCCESS)
-          .catchError((_) => SubmitStatus.FAIL);
-    } else {
-      return _bloc
-          .update(restaurant)
-          .then((_) => SubmitStatus.SUCCESS)
-          .catchError((_) => SubmitStatus.FAIL);
-    }
+
+    final fresh = widget.restaurant == null;
+    final future = fresh ? _bloc.createNew(restaurant) : _bloc.update(restaurant);
+    return future.then((_) => SubmitStatus.SUCCESS).catchError((_) => SubmitStatus.FAIL);
   }
 }

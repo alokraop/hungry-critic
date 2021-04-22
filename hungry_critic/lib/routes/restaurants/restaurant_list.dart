@@ -63,7 +63,6 @@ class _RestaurantListState extends State<RestaurantList> {
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: _bloc.restaurants,
-      initialData: <String>[],
       builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
         final data = snapshot.data;
         if (data == null) return Container();

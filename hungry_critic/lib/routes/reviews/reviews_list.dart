@@ -110,6 +110,10 @@ class _ReviewsListState extends State<ReviewsList> {
   }
 
   _startReply(Review review) {
-    Navigator.of(context).push(CreateEntity(type: Entity.REPLY, entity: review));
+    Navigator.of(context).push(CreateEntity(type: Entity.REPLY, entity: review)).then((success) {
+      if (success != null && success) {
+        _bloc.remove(review);
+      }
+    });
   }
 }

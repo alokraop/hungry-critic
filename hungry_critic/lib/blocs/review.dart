@@ -118,12 +118,20 @@ class ReviewBloc {
     return worst;
   }
 
-  Future updateReply(Review review, String reply) async {
+  Future addReply(Review review, String reply) async {
     review.reply = reply;
     _rMap[review.author] = review;
     _publish();
     rBloc.updateReply(review);
     return api.addReply(review);
+  }
+
+  Future updateReply(Review review, String reply) async {
+    review.reply = reply;
+    _rMap[review.author] = review;
+    _publish();
+    rBloc.updateReply(review);
+    return api.updateReply(review);
   }
 
   Future deleteReply(Review review) async {

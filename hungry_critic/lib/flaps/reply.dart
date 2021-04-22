@@ -155,9 +155,10 @@ class _ReplyFormState extends EntityCreator<ReplyForm> {
   FutureOr<SubmitStatus> submit() {
     final valid = _formKey.currentState?.validate() ?? false;
     if (!valid) return SubmitStatus.INVALID;
-    return _rBloc
-        .updateReply(widget.review, _replyC.text)
-        .then((_) => SubmitStatus.SUCCESS)
-        .catchError((_) => SubmitStatus.FAIL);
+    final hasReply = widget.review.reply != null;
+    final result = hasReply
+        ? _rBloc.updateReply(widget.review, _replyC.text)
+        : _rBloc.addReply(widget.review, _replyC.text);
+    return result.then((_) => SubmitStatus.SUCCESS).catchError((_) => SubmitStatus.FAIL);
   }
 }

@@ -61,11 +61,19 @@ class RestaurantApi {
   }
 
   Future addReply(Review review) async {
+    return _sendReply(review, http.post);
+  }
+
+  Future updateReply(Review review) async {
+    return _sendReply(review, http.put);
+  }
+
+  Future _sendReply(Review review, http.HttpMethod method) async {
     final reply = review.reply;
     if (reply == null) return;
     final fields = {'response': reply};
     final uri = url(review.restaurant, ['reviews', review.author, 'replies']);
-    return http.put(uri, headers: headers, body: jsonEncode(fields));
+    return method(uri, headers: headers, body: jsonEncode(fields));
   }
 
   Future deleteReply(Review review) async {

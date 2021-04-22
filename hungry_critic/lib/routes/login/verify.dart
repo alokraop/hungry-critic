@@ -42,13 +42,19 @@ class _VerifyScreenState extends State<VerifyScreen> {
       alignment: Alignment.topLeft,
       children: [
         Container(
+          width: double.infinity,
           color: swatch[400],
           padding: EdgeInsets.symmetric(horizontal: 15),
           child: _buildContent(screen),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          child: BackButton(onPressed: widget.onCancel),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: BackButton(
+              color: greySwatch[50],
+              onPressed: widget.onCancel,
+            ),
+          ),
         ),
       ],
     );

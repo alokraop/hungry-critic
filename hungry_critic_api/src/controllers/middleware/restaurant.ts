@@ -7,7 +7,8 @@ import { RestaurantService } from '../../services/restaurants';
 const service = () => Container.get(RestaurantService);
 
 export const FetchRestaurant = async (req: Request, res: Response, next: NextFunction) => {
-  res.locals.restaurant = await service().fetch(res.locals.rId);
+  const id = req.params.rId ?? res.locals.rId;
+  res.locals.restaurant = await service().fetch(id);
   next();
 };
 

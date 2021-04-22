@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'blocs/account.dart';
+import 'blocs/master.dart';
 import 'blocs/pending_review.dart';
 import 'blocs/restaurant.dart';
 import 'blocs/review.dart';
@@ -79,15 +80,9 @@ class _HungryCriticState extends State<HungryCritic> {
   bool _initialized = false;
   bool _loggedIn = true;
 
+  late MasterBloc _bloc;
+
   late AccountBloc _self;
-
-  late RestaurantBloc _rBloc;
-
-  late ReviewBloc _reBloc;
-
-  late UserBloc _uBloc;
-
-  late PendingReviewBloc _pBloc;
 
   @override
   void initState() {
@@ -138,11 +133,7 @@ class _HungryCriticState extends State<HungryCritic> {
 
   _buildApp() {
     return BlocsContainer(
-      aBloc: _self,
-      rBloc: _rBloc,
-      uBloc: _uBloc,
-      reBloc: _reBloc,
-      pBloc: _pBloc,
+      blocs: _bloc,
       child: MainRouter(
         theme: theme,
         bloc: _self,
@@ -153,16 +144,23 @@ class _HungryCriticState extends State<HungryCritic> {
   }
 
   _initBlocs() {
-    _rBloc = RestaurantBloc(_self);
-    _rBloc.init();
-    _reBloc = ReviewBloc(_self, _rBloc);
-    _uBloc = UserBloc(_self, _rBloc);
+    final rBloc = RestaurantBloc(_self);
+    rBloc.init();
+    final reBloc = ReviewBloc(_self, rBloc);
+    final uBloc = UserBloc(_self, rBloc);
     if (_self.account.role == UserRole.ADMIN) {
-      _uBloc.init();
+      uBloc.init();
     }
-    _pBloc = PendingReviewBloc(_self, _rBloc);
+    final pBloc = PendingReviewBloc(_self, rBloc);
     if (_self.account.role == UserRole.OWNER) {
-      _pBloc.init();
+      pBloc.init();
     }
+    _bloc = MasterBloc(
+      aBloc: _self,
+      rBloc: rBloc,
+      reBloc: reBloc,
+      uBloc: uBloc,
+      pBloc: pBloc,
+    );
   }
 }

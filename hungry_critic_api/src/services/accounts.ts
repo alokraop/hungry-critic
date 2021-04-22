@@ -92,7 +92,7 @@ export class AccountService {
     const { initialized, blocked } = settings;
     const fields: any = {};
     if (blocked !== undefined) fields['settings.blocked'] = blocked;
-    if (initialized !== undefined) fields['settings.initialized'] = initialized;
+    if (initialized) fields['settings.initialized'] = initialized;
     return fields;
   }
 }

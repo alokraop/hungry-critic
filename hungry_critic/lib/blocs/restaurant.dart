@@ -50,16 +50,23 @@ class RestaurantBloc {
     final restaurant = await api.createNew(r);
     _restaurants.add(restaurant.id);
     _rMap[restaurant.id] = restaurant;
-    _publish();
+    _publish(false);
   }
 
   Future update(Restaurant restaurant) async {
     _rMap[restaurant.id] = restaurant;
-    _publish();
+    _publish(false);
     return api.update(restaurant);
   }
 
-  _publish() {
+  _publish([bool sort = true]) {
+    if (sort) {
+      _restaurants.sort((a, b) {
+        final aRating = _rMap[a]?.averageRating ?? 0;
+        final bRating = _rMap[b]?.averageRating ?? 0;
+        return bRating.compareTo(aRating);
+      });
+    }
     _rSubject.sink.add(_restaurants);
   }
 
@@ -70,7 +77,7 @@ class RestaurantBloc {
   Future deleteRestaurant(Restaurant restaurant) async {
     _restaurants.remove(restaurant.id);
     _rMap.remove(restaurant.id);
-    _publish();
+    _publish(false);
     return api.delete(restaurant.id);
   }
 
@@ -139,7 +146,7 @@ class RestaurantBloc {
       restaurant.worstReview = review;
     }
 
-    _publish();
+    _publish(false);
   }
 
   Future deleteReviews(String id) {
@@ -148,6 +155,6 @@ class RestaurantBloc {
 
   Future deleteRestaurants(String id) async {
     _restaurants = _restaurants.where((rId) => _rMap[rId]?.owner != id).toList();
-    _publish();
+    _publish(false);
   }
 }

@@ -17,7 +17,7 @@ abstract class EntityCreator<T extends StatefulWidget> extends State<T> {
   FutureOr<SubmitStatus> submit();
 }
 
-class CreateEntity extends PopupRoute<String> {
+class CreateEntity extends PopupRoute<bool> {
   CreateEntity({this.entity, required this.type});
 
   final entity;
@@ -264,7 +264,7 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
     setState(() => _loading = false);
     switch (status) {
       case SubmitStatus.SUCCESS:
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
         break;
       case SubmitStatus.FAIL:
         Navigator.of(context).pushReplacement(
@@ -275,6 +275,7 @@ class _CreationFlapState extends State<CreationFlap> with TickerProviderStateMix
             ),
             'Failed! Please try again later.',
           ),
+          result: false,
         );
         break;
       case SubmitStatus.INVALID:

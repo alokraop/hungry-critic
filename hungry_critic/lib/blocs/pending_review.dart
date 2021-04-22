@@ -7,13 +7,9 @@ import 'account.dart';
 import 'restaurant.dart';
 
 class PendingReviewBloc {
-  PendingReviewBloc(this.aBloc, this.rBloc)
-      : _api = ReviewApi(aBloc.config, aBloc.token),
-        _rApi = RestaurantApi(aBloc.config, aBloc.token);
+  PendingReviewBloc(this.aBloc, this.rBloc) : _api = ReviewApi(aBloc.config, aBloc.token);
 
   final ReviewApi _api;
-
-  final RestaurantApi _rApi;
 
   final AccountBloc aBloc;
 
@@ -47,14 +43,10 @@ class PendingReviewBloc {
     return length == limit;
   }
 
-  Future addComment(Review review, String reply) async {
+  Future remove(Review review) {
     _reviews.remove(review);
-    review.reply = reply;
     _publish();
-    return Future.wait([
-      rBloc.init(),
-      _rApi.addReply(review),
-    ]);
+    return rBloc.init();
   }
 
   _publish() {

@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 
 import 'aspects.dart';
 
+typedef Future<String> HttpMethod(Uri url, {Map<String, String>? headers, body});
+
 class HttpException implements Exception {
   HttpException(this.message);
 

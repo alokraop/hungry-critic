@@ -345,6 +345,8 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
           return _makeError('This account has been blocked! Contact the admin!');
         case AuthStatus.NO_ACCOUNT:
           return _makeError('No account found! Try signing up!');
+        case AuthStatus.ERROR:
+          return _makeError('Unknown error! Please try again later!');
         default:
       }
     }
@@ -512,6 +514,10 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
         return 'This account already exists! Try signing in!';
       case AuthStatus.NO_ACCOUNT:
         return 'No account found';
+      case AuthStatus.WEAK_PASSWORD:
+        return 'Weak password! Use at least 8 characters!';
+      case AuthStatus.ERROR:
+        return 'Unknown Error! Please try again later!';
       default:
         return null;
     }

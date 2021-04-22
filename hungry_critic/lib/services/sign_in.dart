@@ -132,7 +132,13 @@ class SignUpService {
     if (user == null) throw Exception('Could not create!');
     final creds = Credentials(info.method, info.id, user.uid);
     final api = SignInApi(bloc.config);
-    final receipt = await (info.create ? api.signUp(creds) : api.signIn(creds));
+    final receipt = info.create
+        ? await api.signUp(creds)
+        : await api.signIn(creds).catchError((e) {
+            return e is LoginException && e.status == 400
+                ? api.signUp(creds).catchError((_) => throw e)
+                : throw e;
+          });
     _account = Account(
       id: receipt.id,
       email: info.email,
