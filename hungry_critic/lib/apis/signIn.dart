@@ -24,20 +24,20 @@ class SignInApi {
   final headers = {'Content-Type': 'application/json'};
 
   Future<AuthReceipt> signUp(Credentials creds) {
-    return auth(creds, 'sign-up');
+    return auth(creds, 'sign-up', 201);
   }
 
   Future<AuthReceipt> signIn(Credentials creds) {
-    return auth(creds, 'sign-in');
+    return auth(creds, 'sign-in', 200);
   }
 
-  Future<AuthReceipt> auth(Credentials creds, String method) async {
+  Future<AuthReceipt> auth(Credentials creds, String method, int code) async {
     final response = await http.rawPost(
       url(method),
       headers: headers,
       body: jsonEncode(creds),
     );
-    if (response.statusCode == 201) {
+    if (response.statusCode == code) {
       final receipt = AuthReceipt.fromJson(jsonDecode(response.body));
       headers['token'] = receipt.token;
       return receipt;

@@ -52,7 +52,10 @@ Future<http.Response> rawPost(
   body,
   Encoding? encoding,
 }) {
-  return http.post(url, headers: headers, body: body, encoding: encoding).catchError(recordError);
+  return http
+      .post(url, headers: headers, body: body, encoding: encoding)
+      .timeout(Duration(seconds: 10))
+      .catchError(recordError);
 }
 
 Future<String> put(
@@ -68,6 +71,7 @@ Future<String> put(
         body: body,
         encoding: encoding,
       )
+      .timeout(Duration(seconds: 10))
       .catchError(recordError);
   final firstDigit = response.statusCode ~/ 100;
   if (firstDigit != 2) {

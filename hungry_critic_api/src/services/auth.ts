@@ -29,7 +29,7 @@ export class AuthService {
     creds.identifier = creds.identifier.toLowerCase();
     const id = this.hasher.simple(creds.identifier);
     const account = await this.service.fetchInternal(id);
-    if (account) throw new APIError('An account with this identifier already exists!');
+    if (account) throw new APIError('An account with this identifier already exists!', 409);
     return this.createAccount(id, creds);
   }
 
@@ -41,7 +41,6 @@ export class AuthService {
     return this.verifyCreds(account, creds);
   }
 
-  
   async deleteAccount(id: string): Promise<any> {
     const account = await this.service.delete(id);
     return this.dao.deleteRecord(account.settings);
@@ -50,7 +49,7 @@ export class AuthService {
   private async createAccount(id: string, creds: SignUpCredentials): Promise<AuthReceipt> {
     this.logger.debug('Creating new account', { accountId: id });
     const success = await this.verify(creds);
-    if (!success) throw new APIError('You are not authorized to create this account!', 403);
+    if (!success) throw new APIError('You are not authorized to create this account!', 401);
     const hashedPassword = await this.hasher.withSalt(creds.firebaseId);
     const account = <Account>{
       id,
@@ -67,7 +66,7 @@ export class AuthService {
     const match = await this.hasher.verify(settings.hashedPassword, creds.firebaseId);
     if (!match) {
       await this.service.markFail(account);
-      throw new APIError('Your credentials were incorrect', 403);
+      throw new APIError('Your credentials were incorrect', 401);
     }
     if (settings.attempts > 0) await this.service.resetAttempts(account);
     return this.makeReceipt(account);

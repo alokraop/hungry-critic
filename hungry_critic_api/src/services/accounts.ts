@@ -3,6 +3,7 @@ import { APIError } from '../controllers/middleware/error';
 import { AccountDao } from '../data/accounts';
 import { Account, AuthReceipt, Profile, Settings, UserRole } from '../models/account';
 import { PageInfo, TokenInfo } from '../models/internal';
+import { BlockService } from './block';
 import { RestaurantService } from './restaurants';
 import { TokenService } from './token';
 
@@ -12,6 +13,7 @@ export class AccountService {
     private dao: AccountDao,
     private token: TokenService,
     private rService: RestaurantService,
+    private bService: BlockService,
   ) {}
 
   async fetchAll(page: PageInfo): Promise<Account[]> {
@@ -52,6 +54,11 @@ export class AccountService {
     if (self) {
       return this.dao.update({ id }, profile);
     } else {
+      if (settings.blocked) {
+        this.bService.add(id);
+      } else {
+        this.bService.remove(id);
+      }
       return this.dao.update({ id }, { ...profile, ...this.flatten(settings) });
     }
   }

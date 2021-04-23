@@ -425,7 +425,13 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
           Aspects.instance.log('Login -> $method -> Fail');
           switch (exception.status) {
             case 400:
-              _status = _create ? AuthStatus.DUPLICATE : AuthStatus.NO_ACCOUNT;
+              _status = AuthStatus.NO_ACCOUNT;
+              break;
+            case 401:
+              _status = AuthStatus.INCORRECT_CREDS;
+              break;
+            case 409:
+              _status = AuthStatus.DUPLICATE;
               break;
             case 412:
               _status = AuthStatus.BLOCKED;
@@ -460,10 +466,13 @@ class _AuthInitPageState extends State<AuthInitPage> with SingleTickerProviderSt
           Aspects.instance.log('Login -> $method -> Fail');
           switch (exception.status) {
             case 400:
-              _status = _create ? AuthStatus.DUPLICATE : AuthStatus.NO_ACCOUNT;
+              _status = AuthStatus.NO_ACCOUNT;
               break;
-            case 403:
-              if (!_create) _status = AuthStatus.INCORRECT_CREDS;
+            case 401:
+              _status = AuthStatus.INCORRECT_CREDS;
+              break;
+            case 409:
+              _status = AuthStatus.DUPLICATE;
               break;
             case 412:
               _status = AuthStatus.BLOCKED;

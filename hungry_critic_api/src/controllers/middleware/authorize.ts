@@ -14,7 +14,7 @@ export function Allow(...predicates: Authorizer[]) {
         return;
       }
     }
-    throw new APIError('Your role does not have priviledges to call this endpoint!');
+    throw new APIError('Your role does not have priviledges to call this endpoint!', 403);
   };
 }
 

@@ -4,7 +4,7 @@ export class Review {
   @Allow()
   author: string;
 
-  @Allow()
+  @IsDefined()
   authorName: string;
 
   @Allow()

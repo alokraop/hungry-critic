@@ -34,7 +34,7 @@ restaurantRouter.post(
   Allow(Roles(UserRole.OWNER)),
   async (req: Request, res: Response) => {
     const restaurant = await service().create(req.body, res.locals.info);
-    res.json(restaurant);
+    res.status(201).json(restaurant);
   },
 );
 
